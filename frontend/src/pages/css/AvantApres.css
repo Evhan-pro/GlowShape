@@ -1,0 +1,58 @@
+.preview-image{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* =========================
+   MODAL CONTAINER
+========================= */
+
+.modal-slider {
+  display: inline-block;
+  max-width: 90vw;
+  max-height: 75vh;
+  background: #000;
+  overflow: hidden;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* =========================
+   IMAGES DANS LA MODAL
+========================= */
+
+.modal-img {
+  display: block;
+  max-width: 90vw;
+  max-height: 75vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+.modal-image-wrapper {
+  width: 90%;
+  max-width: 900px;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Important pour le clipping du slider */
+.modal-slider > div {
+  max-width: 100%;
+  max-height: 100%;
+}
+

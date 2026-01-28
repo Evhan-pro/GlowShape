@@ -1,53 +1,83 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+import Prestations from './pages/Prestations';
+import Contact from './pages/Contact';
+import Reservation from './pages/Reservation';
+import AvantApres from './pages/AvantApres';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPrestations from './pages/admin/AdminPrestations';
+import AdminReservations from './pages/admin/AdminReservations';
+import AdminContacts from './pages/admin/AdminContacts';
+import AdminParametres from './pages/admin/AdminParametres';
+import AdminHoraires from './pages/admin/AdminHoraires';
+import AdminHomepage from './pages/admin/AdminHomepage';
+import AdminAvantApres from './pages/admin/AdminAvantApres';
+import AdminTemoignages from './pages/admin/AdminTemoignages';
+import './App.css';
 
 function App() {
   return (
-    <div className="App">
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
+          {/* Routes publiques */}
+          <Route path="/" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><Home /></main>
+              <Footer />
+            </div>
+          } />
+          <Route path="/prestations" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><Prestations /></main>
+              <Footer />
+            </div>
+          } />
+          <Route path="/contact" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><Contact /></main>
+              <Footer />
+            </div>
+          } />
+          <Route path="/reservation" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><Reservation /></main>
+              <Footer />
+            </div>
+          } />
+          <Route path="/avant-apres" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><AvantApres /></main>
+              <Footer />
+            </div>
+          } />
+
+          {/* Routes admin */}
+          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/prestations" element={<ProtectedRoute><AdminPrestations /></ProtectedRoute>} />
+          <Route path="/admin/reservations" element={<ProtectedRoute><AdminReservations /></ProtectedRoute>} />
+          <Route path="/admin/contacts" element={<ProtectedRoute><AdminContacts /></ProtectedRoute>} />
+          <Route path="/admin/horaires" element={<ProtectedRoute><AdminHoraires /></ProtectedRoute>} />
+          <Route path="/admin/homepage-content" element={<ProtectedRoute><AdminHomepage /></ProtectedRoute>} />
+          <Route path="/admin/avant-apres" element={<ProtectedRoute><AdminAvantApres /></ProtectedRoute>} />
+          <Route path="/admin/temoignages" element={<ProtectedRoute><AdminTemoignages /></ProtectedRoute>} />
+          <Route path="/admin/parametres" element={<ProtectedRoute><AdminParametres /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </AuthProvider>
   );
 }
 

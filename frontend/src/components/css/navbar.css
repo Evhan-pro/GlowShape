@@ -1,0 +1,37 @@
+.logo-glowshape {
+  height: 56px; /* mobile */
+}
+
+@media (min-width: 768px) {
+  .logo-glowshape {
+    height: 110px; /* desktop */
+  }
+}
+
+@media (min-width: 1280px) {
+  .logo-glowshape {
+    height: 150px; /* grands écrans */
+  }
+}
+
+/* Navbar: réduire les espacements horizontaux */
+.navbar-container {
+  padding-left: 1rem;   /* 16px */
+  padding-right: 1rem;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .navbar-container {
+    padding-left: 2rem;  /* 32px */
+    padding-right: 2rem;
+  }
+}
+
+/* Très grands écrans */
+@media (min-width: 1280px) {
+  .navbar-container {
+    padding-left: 3rem;  /* 48px */
+    padding-right: 3rem;
+  }
+}
