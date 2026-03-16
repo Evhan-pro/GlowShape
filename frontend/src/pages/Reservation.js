@@ -100,10 +100,8 @@ export default function Reservation() {
   };
 
   const handlePaymentSuccess = (reservation) => {
-    // Redirect to success page with reservation details
-    navigate('/reservation-success', { 
-      state: { reservation } 
-    });
+    // La redirection est gérée dans CardPaymentForm
+    console.log('Paiement réussi:', reservation);
   };
 
   const handlePaymentError = (error) => {
