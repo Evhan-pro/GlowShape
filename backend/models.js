@@ -36,6 +36,14 @@ const Reservation = sequelize.define('Reservation', {
   heure_fin: { type: DataTypes.TIME, allowNull: false },
   statut: { type: DataTypes.STRING, defaultValue: 'confirmed' },
   google_event_id: DataTypes.STRING,
+  // Champs paiement Stripe
+  montant_total: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+  montant_acompte: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
+  statut_paiement: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending, paid, refunded_partial, refunded_full
+  stripe_payment_intent_id: DataTypes.STRING,
+  stripe_charge_id: DataTypes.STRING,
+  date_paiement: DataTypes.DATE,
+  date_annulation: DataTypes.DATE,
   created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
 }, { tableName: 'reservations', timestamps: false });
 
