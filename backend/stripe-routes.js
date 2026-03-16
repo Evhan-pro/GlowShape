@@ -5,9 +5,9 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { Reservation, Prestation } = require('./models');
 
 // =============================================
-// CRÉER UNE SESSION DE PAIEMENT STRIPE
+// CRÉER UN SETUP INTENT (Enregistrement de carte SANS débit)
 // =============================================
-router.post('/create-checkout-session', async (req, res) => {
+router.post('/create-setup-intent', async (req, res) => {
   try {
     const { prestation_id, nom_client, email_client, telephone_client, date, heure_debut, heure_fin } = req.body;
 
@@ -20,7 +20,45 @@ router.post('/create-checkout-session', async (req, res) => {
     const montantTotal = parseFloat(prestation.prix_euros);
     const montantAcompte = (montantTotal * 0.3).toFixed(2); // 30% d'acompte
 
-    // Créer la réservation en attente de paiement
+    // Créer ou récupérer le client Stripe
+    const customers = await stripe.customers.list({
+      email: email_client,
+      limit: 1
+    });
+
+    let customer;
+    if (customers.data.length > 0) {
+      customer = customers.data[0];
+    } else {
+      customer = await stripe.customers.create({
+        email: email_client,
+        name: nom_client,
+        phone: telephone_client,
+        metadata: {
+          source: 'glowshape_reservation'
+        }
+      });
+    }
+
+    // Créer le Setup Intent pour enregistrer la carte
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customer.id,
+      payment_method_types: ['card'],
+      metadata: {
+        nom_client,
+        email_client,
+        telephone_client,
+        prestation_id,
+        prestation_nom: prestation.nom,
+        date,
+        heure_debut,
+        heure_fin,
+        montant_total: montantTotal,
+        montant_acompte: montantAcompte
+      }
+    });
+
+    // Créer la réservation en attente
     const reservation = await Reservation.create({
       prestation_id,
       prestation_nom: prestation.nom,
@@ -32,82 +70,139 @@ router.post('/create-checkout-session', async (req, res) => {
       heure_fin,
       montant_total: montantTotal,
       montant_acompte: montantAcompte,
-      statut_paiement: 'pending',
-      statut: 'pending'
-    });
-
-    // Créer la session de paiement Stripe
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: prestation.nom,
-              description: `Réservation pour le ${date} à ${heure_debut}`,
-            },
-            unit_amount: Math.round(montantTotal * 100), // Stripe utilise les centimes
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000'}/reservation-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000'}/reservation`,
-      client_reference_id: reservation.id,
-      customer_email: email_client,
-      metadata: {
-        reservation_id: reservation.id,
-        prestation_nom: prestation.nom
-      }
+      statut_paiement: 'pending', // En attente du jour J
+      statut: 'confirmed', // Réservation confirmée mais paiement en attente
+      stripe_customer_id: customer.id,
+      stripe_setup_intent_id: setupIntent.id
     });
 
     res.json({ 
-      sessionId: session.id,
+      clientSecret: setupIntent.client_secret,
       reservationId: reservation.id,
-      url: session.url
+      setupIntentId: setupIntent.id
     });
 
   } catch (error) {
-    console.error('Erreur création session Stripe:', error);
+    console.error('Erreur création setup intent:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // =============================================
-// CONFIRMER LE PAIEMENT (après redirection Stripe)
+// CONFIRMER L'ENREGISTREMENT DE LA CARTE
 // =============================================
-router.get('/confirm-payment/:sessionId', async (req, res) => {
+router.post('/confirm-card-registration/:reservationId', async (req, res) => {
   try {
-    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    const { payment_method_id } = req.body;
+    const reservation = await Reservation.findByPk(req.params.reservationId);
 
-    if (session.payment_status === 'paid') {
-      const reservationId = session.client_reference_id;
-      
-      await Reservation.update({
-        statut_paiement: 'paid',
-        statut: 'confirmed',
-        stripe_payment_intent_id: session.payment_intent,
-        date_paiement: new Date()
-      }, {
-        where: { id: reservationId }
-      });
-
-      const reservation = await Reservation.findByPk(reservationId);
-      res.json({ success: true, reservation });
-    } else {
-      res.json({ success: false, message: 'Paiement non confirmé' });
+    if (!reservation) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
     }
 
+    // Attacher le payment method au customer
+    await stripe.paymentMethods.attach(payment_method_id, {
+      customer: reservation.stripe_customer_id,
+    });
+
+    // Définir comme méthode par défaut
+    await stripe.customers.update(reservation.stripe_customer_id, {
+      invoice_settings: {
+        default_payment_method: payment_method_id,
+      },
+    });
+
+    // Mettre à jour la réservation
+    await Reservation.update({
+      stripe_payment_method_id: payment_method_id,
+      statut: 'confirmed'
+    }, {
+      where: { id: req.params.reservationId }
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Carte enregistrée avec succès',
+      reservation: await Reservation.findByPk(req.params.reservationId)
+    });
+
   } catch (error) {
-    console.error('Erreur confirmation paiement:', error);
+    console.error('Erreur confirmation carte:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // =============================================
-// ANNULER UNE RÉSERVATION AVEC REMBOURSEMENT
+// DÉBITER L'ACOMPTE (appelé le jour J ou lors d'annulation < 48h)
+// =============================================
+router.post('/charge-deposit/:reservationId', async (req, res) => {
+  try {
+    const reservation = await Reservation.findByPk(req.params.reservationId);
+    
+    if (!reservation) {
+      return res.status(404).json({ error: 'Réservation non trouvée' });
+    }
+
+    if (reservation.statut_paiement === 'paid') {
+      return res.status(400).json({ error: 'Acompte déjà débité' });
+    }
+
+    if (!reservation.stripe_payment_method_id) {
+      return res.status(400).json({ error: 'Aucune carte enregistrée' });
+    }
+
+    // Créer le Payment Intent pour débiter l'acompte
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(parseFloat(reservation.montant_acompte) * 100), // 30% en centimes
+      currency: 'eur',
+      customer: reservation.stripe_customer_id,
+      payment_method: reservation.stripe_payment_method_id,
+      off_session: true, // Paiement sans présence du client
+      confirm: true,
+      description: `Acompte - ${reservation.prestation_nom} - ${reservation.date}`,
+      metadata: {
+        reservation_id: reservation.id,
+        type: 'acompte',
+        prestation_nom: reservation.prestation_nom,
+        date: reservation.date
+      }
+    });
+
+    // Mettre à jour la réservation
+    await Reservation.update({
+      statut_paiement: 'paid',
+      stripe_payment_intent_id: paymentIntent.id,
+      stripe_charge_id: paymentIntent.latest_charge,
+      date_paiement: new Date()
+    }, {
+      where: { id: req.params.reservationId }
+    });
+
+    res.json({
+      success: true,
+      message: `Acompte de ${reservation.montant_acompte}€ débité avec succès`,
+      payment_intent_id: paymentIntent.id
+    });
+
+  } catch (error) {
+    console.error('Erreur débit acompte:', error);
+    
+    // Si la carte est refusée
+    if (error.code === 'card_declined' || error.type === 'StripeCardError') {
+      await Reservation.update({
+        statut: 'payment_failed',
+        statut_paiement: 'failed'
+      }, {
+        where: { id: req.params.reservationId }
+      });
+    }
+    
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// =============================================
+// ANNULER UNE RÉSERVATION (avec débit acompte si < 48h)
 // =============================================
 router.post('/cancel-reservation/:id', async (req, res) => {
   try {
@@ -117,66 +212,191 @@ router.post('/cancel-reservation/:id', async (req, res) => {
       return res.status(404).json({ error: 'Réservation non trouvée' });
     }
 
-    if (reservation.statut_paiement !== 'paid') {
-      return res.status(400).json({ error: 'Réservation non payée' });
-    }
-
     // Calculer le délai avant le rendez-vous
     const now = new Date();
     const rdvDate = new Date(`${reservation.date}T${reservation.heure_debut}`);
     const heuresAvantRdv = (rdvDate - now) / (1000 * 60 * 60);
 
-    let montantRemboursement;
-    let nouveauStatut;
+    let message;
+    let montantDebite = 0;
 
     if (heuresAvantRdv >= 48) {
-      // Plus de 48h : remboursement 100%
-      montantRemboursement = parseFloat(reservation.montant_total);
-      nouveauStatut = 'refunded_full';
+      // Plus de 48h : Annulation gratuite
+      await Reservation.update({
+        statut: 'cancelled',
+        statut_paiement: 'no_charge',
+        date_annulation: new Date()
+      }, {
+        where: { id: req.params.id }
+      });
+
+      message = 'Réservation annulée gratuitement (plus de 48h avant le RDV)';
+
     } else {
-      // Moins de 48h : remboursement 70% (garde 30% acompte)
-      montantRemboursement = parseFloat(reservation.montant_total) - parseFloat(reservation.montant_acompte);
-      nouveauStatut = 'refunded_partial';
-    }
+      // Moins de 48h : Débiter l'acompte de 30%
+      if (reservation.statut_paiement !== 'paid') {
+        try {
+          // Débiter l'acompte
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(parseFloat(reservation.montant_acompte) * 100),
+            currency: 'eur',
+            customer: reservation.stripe_customer_id,
+            payment_method: reservation.stripe_payment_method_id,
+            off_session: true,
+            confirm: true,
+            description: `Acompte (annulation < 48h) - ${reservation.prestation_nom}`,
+            metadata: {
+              reservation_id: reservation.id,
+              type: 'cancellation_fee',
+              prestation_nom: reservation.prestation_nom
+            }
+          });
 
-    // Effectuer le remboursement via Stripe
-    const refund = await stripe.refunds.create({
-      payment_intent: reservation.stripe_payment_intent_id,
-      amount: Math.round(montantRemboursement * 100), // Convertir en centimes
-      reason: 'requested_by_customer',
-      metadata: {
-        reservation_id: reservation.id,
-        delai_heures: heuresAvantRdv.toFixed(2)
+          await Reservation.update({
+            statut: 'cancelled',
+            statut_paiement: 'paid',
+            stripe_payment_intent_id: paymentIntent.id,
+            date_paiement: new Date(),
+            date_annulation: new Date()
+          }, {
+            where: { id: req.params.id }
+          });
+
+          montantDebite = parseFloat(reservation.montant_acompte);
+          message = `Annulation moins de 48h avant : acompte de ${montantDebite}€ (30%) débité`;
+
+        } catch (error) {
+          console.error('Erreur débit acompte annulation:', error);
+          
+          await Reservation.update({
+            statut: 'cancelled',
+            statut_paiement: 'payment_failed',
+            date_annulation: new Date()
+          }, {
+            where: { id: req.params.id }
+          });
+
+          return res.status(500).json({ 
+            error: 'Erreur lors du débit de l\'acompte',
+            details: error.message 
+          });
+        }
+      } else {
+        // Acompte déjà débité
+        await Reservation.update({
+          statut: 'cancelled',
+          date_annulation: new Date()
+        }, {
+          where: { id: req.params.id }
+        });
+
+        montantDebite = parseFloat(reservation.montant_acompte);
+        message = `Annulation moins de 48h avant : acompte de ${montantDebite}€ déjà débité`;
       }
-    });
-
-    // Mettre à jour la réservation
-    await Reservation.update({
-      statut: 'cancelled',
-      statut_paiement: nouveauStatut,
-      date_annulation: new Date()
-    }, {
-      where: { id: req.params.id }
-    });
+    }
 
     res.json({
       success: true,
-      montant_rembourse: montantRemboursement,
-      montant_garde: nouveauStatut === 'refunded_partial' ? parseFloat(reservation.montant_acompte) : 0,
-      refund_id: refund.id,
-      message: heuresAvantRdv >= 48 
-        ? 'Remboursement complet effectué' 
-        : `Remboursement de ${montantRemboursement}€ effectué (acompte de 30% conservé)`
+      message,
+      montant_debite: montantDebite,
+      heures_avant_rdv: heuresAvantRdv.toFixed(2)
     });
 
   } catch (error) {
-    console.error('Erreur annulation/remboursement:', error);
+    console.error('Erreur annulation:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // =============================================
-// WEBHOOK STRIPE (pour notifications temps réel)
+// DÉBITER TOUS LES ACOMPTES DU JOUR (Tâche CRON)
+// =============================================
+router.post('/charge-today-deposits', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Récupérer toutes les réservations du jour qui n'ont pas encore été débitées
+    const reservations = await Reservation.findAll({
+      where: {
+        date: today,
+        statut: 'confirmed',
+        statut_paiement: 'pending'
+      }
+    });
+
+    const results = {
+      total: reservations.length,
+      success: 0,
+      failed: 0,
+      details: []
+    };
+
+    for (const reservation of reservations) {
+      try {
+        // Débiter l'acompte
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(parseFloat(reservation.montant_acompte) * 100),
+          currency: 'eur',
+          customer: reservation.stripe_customer_id,
+          payment_method: reservation.stripe_payment_method_id,
+          off_session: true,
+          confirm: true,
+          description: `Acompte jour J - ${reservation.prestation_nom}`,
+          metadata: {
+            reservation_id: reservation.id,
+            type: 'jour_j_acompte'
+          }
+        });
+
+        await Reservation.update({
+          statut_paiement: 'paid',
+          stripe_payment_intent_id: paymentIntent.id,
+          date_paiement: new Date()
+        }, {
+          where: { id: reservation.id }
+        });
+
+        results.success++;
+        results.details.push({
+          id: reservation.id,
+          nom_client: reservation.nom_client,
+          montant: reservation.montant_acompte,
+          status: 'success'
+        });
+
+      } catch (error) {
+        console.error(`Erreur débit réservation ${reservation.id}:`, error);
+        
+        await Reservation.update({
+          statut_paiement: 'failed'
+        }, {
+          where: { id: reservation.id }
+        });
+
+        results.failed++;
+        results.details.push({
+          id: reservation.id,
+          nom_client: reservation.nom_client,
+          status: 'failed',
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Débits terminés : ${results.success} succès, ${results.failed} échecs`,
+      results
+    });
+
+  } catch (error) {
+    console.error('Erreur débits du jour:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// =============================================
+// WEBHOOK STRIPE
 // =============================================
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
@@ -189,22 +409,19 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     );
 
     switch (event.type) {
-      case 'checkout.session.completed':
-        const session = event.data.object;
-        const reservationId = session.client_reference_id;
-        
-        await Reservation.update({
-          statut_paiement: 'paid',
-          statut: 'confirmed',
-          stripe_payment_intent_id: session.payment_intent,
-          date_paiement: new Date()
-        }, {
-          where: { id: reservationId }
-        });
+      case 'setup_intent.succeeded':
+        const setupIntent = event.data.object;
+        console.log('Setup Intent réussi:', setupIntent.id);
         break;
 
-      case 'charge.refunded':
-        // Gérer les remboursements
+      case 'payment_intent.succeeded':
+        const paymentIntent = event.data.object;
+        console.log('Payment Intent réussi:', paymentIntent.id);
+        break;
+
+      case 'payment_intent.payment_failed':
+        const failedPayment = event.data.object;
+        console.error('Paiement échoué:', failedPayment.id);
         break;
     }
 
