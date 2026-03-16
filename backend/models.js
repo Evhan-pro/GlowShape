@@ -39,8 +39,11 @@ const Reservation = sequelize.define('Reservation', {
   // Champs paiement Stripe
   montant_total: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
   montant_acompte: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
-  statut_paiement: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending, paid, refunded_partial, refunded_full
-  stripe_payment_intent_id: DataTypes.STRING,
+  statut_paiement: { type: DataTypes.STRING, defaultValue: 'pending' }, // pending, paid, failed, no_charge
+  stripe_customer_id: DataTypes.STRING, // ID client Stripe
+  stripe_setup_intent_id: DataTypes.STRING, // ID Setup Intent
+  stripe_payment_method_id: DataTypes.STRING, // ID carte enregistrée
+  stripe_payment_intent_id: DataTypes.STRING, // ID paiement
   stripe_charge_id: DataTypes.STRING,
   date_paiement: DataTypes.DATE,
   date_annulation: DataTypes.DATE,
