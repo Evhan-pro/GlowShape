@@ -101,41 +101,14 @@ export default function Reservation() {
     }
   };
 
-  const handleSubmitReservation = async () => {
-    setIsSubmitting(true);
-    try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      const reservationData = {
-        prestation_id: selectedPrestation.id,
-        nom_client: clientInfo.nom,
-        email_client: clientInfo.email,
-        telephone_client: clientInfo.telephone,
-        date: dateStr,
-        heure_debut: selectedCreneau.heure_debut,
-        heure_fin: selectedCreneau.heure_fin
-      };
+  const handlePaymentSuccess = (reservation) => {
+    setReservationDetails(reservation);
+    setReservationConfirmed(true);
+  };
 
-      // Créer la session de paiement Stripe
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/stripe/create-checkout-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reservationData)
-      });
-
-      if (response.ok) {
-        const { url } = await response.json();
-        // Rediriger vers Stripe Checkout
-        window.location.href = url;
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Une erreur est survenue lors de la création du paiement');
-        setIsSubmitting(false);
-      }
-    } catch (error) {
-      console.error('Erreur:', error);
-      alert('Erreur de connexion au serveur');
-      setIsSubmitting(false);
-    }
+  const handlePaymentError = (error) => {
+    alert('Erreur lors de l\'enregistrement de la carte : ' + error.message);
+    setIsSubmitting(false);
   };
 
   const formatDate = (date) => {
