@@ -1,9 +1,11 @@
 const { app } = require('./server');
 const routes = require('./routes');
+const stripeRoutes = require('./stripe-routes');
 
 const path = require('path');
 app.use('/uploads', require('express').static(path.join(__dirname, 'uploads')));
 app.use('/api', routes);
+app.use('/api/stripe', stripeRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
