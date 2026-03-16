@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Prestations from './pages/Prestations';
 import Contact from './pages/Contact';
 import Reservation from './pages/Reservation';
+import ReservationSuccess from './pages/ReservationSuccess';
 import AvantApres from './pages/AvantApres';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
