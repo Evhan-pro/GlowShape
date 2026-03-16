@@ -100,8 +100,10 @@ export default function Reservation() {
   };
 
   const handlePaymentSuccess = (reservation) => {
-    setReservationDetails(reservation);
-    setReservationConfirmed(true);
+    // Redirect to success page with reservation details
+    navigate('/reservation-success', { 
+      state: { reservation } 
+    });
   };
 
   const handlePaymentError = (error) => {
