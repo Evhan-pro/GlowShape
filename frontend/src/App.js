@@ -56,6 +56,13 @@ function App() {
               <Footer />
             </div>
           } />
+          <Route path="/reservation-success" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><ReservationSuccess /></main>
+              <Footer />
+            </div>
+          } />
           <Route path="/avant-apres" element={
             <div className="min-h-screen flex flex-col">
               <Navbar />
