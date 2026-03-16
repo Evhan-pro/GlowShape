@@ -157,8 +157,16 @@ async function seedPrestations() {
 }
 
 async function initDatabase() {
+  try {
+    await sequelize.query('DROP VIEW IF EXISTS v_prestations_stats CASCADE');
+    await sequelize.query('DROP VIEW IF EXISTS v_reservations_stats CASCADE');
+    await sequelize.query('DROP VIEW IF EXISTS v_clients_stats CASCADE');
+    await sequelize.query('DROP VIEW IF EXISTS v_chiffre_affaires_mensuel CASCADE');
+    await sequelize.query('DROP VIEW IF EXISTS v_reservations_mois_courant CASCADE');
+  } catch (e) {}
+
   await sequelize.sync({ alter: true });
-  console.log('✓ Database synced');
+  console.log('Database synced');
   await seedPrestations();
 }
 

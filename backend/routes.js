@@ -425,7 +425,11 @@ router.post('/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const admin = await Admin.findOne({ where: { email } });
+    if (!email || !password) {
+      return res.status(400).json({ detail: 'Email et mot de passe requis' });
+    }
+
+    const admin = await Admin.findOne({ where: { email: String(email).toLowerCase().trim() } });
 
     if (!admin || !admin.is_active) {
       return res.status(401).json({ detail: 'Email ou mot de passe incorrect' });
@@ -439,12 +443,12 @@ router.post('/admin/login', async (req, res) => {
     const token = jwt.sign(
       { sub: admin.id, email: admin.email, role: admin.role },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: '24h' }
+      { expiresIn: '8h' }
     );
 
     res.json({ access_token: token, token_type: 'bearer' });
   } catch (error) {
-    res.status(500).json({ detail: error.message });
+    res.status(500).json({ detail: 'Erreur serveur' });
   }
 });
 

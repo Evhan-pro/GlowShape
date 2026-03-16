@@ -1,9 +1,29 @@
 require('dotenv').config();
 const express = require('express');
 const router = express.Router();
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('FATAL: STRIPE_SECRET_KEY manquante');
+  process.exit(1);
+}
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { Op } = require('sequelize');
 const { Reservation, Prestation } = require('./models');
+
+// Validation des champs requis
+function validateFields(body, fields) {
+  const missing = fields.filter(f => !body[f] || String(body[f]).trim() === '');
+  if (missing.length > 0) {
+    return `Champs manquants: ${missing.join(', ')}`;
+  }
+  return null;
+}
+
+// Validation email basique
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 // =============================================
 // ÉTAPE 1 : CRÉER UN SETUP INTENT (PAS de réservation)
@@ -11,6 +31,10 @@ const { Reservation, Prestation } = require('./models');
 router.post('/create-setup-intent', async (req, res) => {
   try {
     const { prestation_id, nom_client, email_client, telephone_client, date, heure_debut, heure_fin } = req.body;
+
+    const validationError = validateFields(req.body, ['prestation_id', 'nom_client', 'email_client', 'telephone_client', 'date', 'heure_debut', 'heure_fin']);
+    if (validationError) return res.status(400).json({ error: validationError });
+    if (!isValidEmail(email_client)) return res.status(400).json({ error: 'Email invalide' });
 
     const prestation = await Prestation.findByPk(prestation_id);
     if (!prestation) {
@@ -80,6 +104,10 @@ router.post('/confirm-and-book', async (req, res) => {
       heure_debut,
       heure_fin
     } = req.body;
+
+    const validationError = validateFields(req.body, ['setup_intent_id', 'payment_method_id', 'customer_id', 'prestation_id', 'nom_client', 'email_client', 'telephone_client', 'date', 'heure_debut', 'heure_fin']);
+    if (validationError) return res.status(400).json({ error: validationError });
+    if (!isValidEmail(email_client)) return res.status(400).json({ error: 'Email invalide' });
 
     // 1. Vérifier que le SetupIntent est bien succeeded
     const setupIntent = await stripe.setupIntents.retrieve(setup_intent_id);
