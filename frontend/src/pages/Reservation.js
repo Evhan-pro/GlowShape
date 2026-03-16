@@ -113,57 +113,6 @@ export default function Reservation() {
     return date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  if (reservationConfirmed && reservationDetails) {
-    return (
-      <div data-testid="confirmation-page" className="min-h-screen pt-24 pb-16">
-        <div className="container-custom max-w-2xl px-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white border border-border rounded-sm p-6 sm:p-8 md:p-12 text-center"
-          >
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-              <Check className="text-green-600" size={24} />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-serif mb-3 sm:mb-4">Réservation Confirmée !</h1>
-            <p className="text-muted-foreground mb-6 sm:mb-8 text-sm sm:text-base">
-              Votre réservation a été enregistrée avec succès. Un email de confirmation vous a été envoyé.
-            </p>
-
-            <div className="bg-secondary/30 rounded-sm p-4 sm:p-6 mb-6 sm:mb-8 text-left">
-              <h2 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">Détails de votre réservation :</h2>
-              <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-                <div>
-                  <span className="text-muted-foreground">Prestation :</span>
-                  <span className="ml-2 font-medium break-words">{reservationDetails.prestation_nom}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Date :</span>
-                  <span className="ml-2 font-medium">{reservationDetails.date}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Horaire :</span>
-                  <span className="ml-2 font-medium">{reservationDetails.heure_debut} - {reservationDetails.heure_fin}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Nom :</span>
-                  <span className="ml-2 font-medium break-words">{reservationDetails.nom_client}</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => window.location.href = '/'}
-              className="btn-primary px-6 sm:px-8 py-2.5 sm:py-3 bg-accent text-accent-foreground rounded-sm font-medium text-sm sm:text-base"
-            >
-              Retour à l'accueil
-            </button>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div data-testid="reservation-page" className="min-h-screen pt-24 pb-16">
       {/* Header */}
