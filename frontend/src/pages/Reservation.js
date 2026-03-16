@@ -442,9 +442,10 @@ export default function Reservation() {
                     type="submit"
                     data-testid="confirm-reservation-button"
                     disabled={isSubmitting}
-                    className="w-full btn-primary px-4 sm:px-6 py-2.5 sm:py-3 bg-accent text-accent-foreground rounded-sm font-medium disabled:opacity-50 text-sm sm:text-base"
+                    className="w-full btn-primary px-4 sm:px-6 py-2.5 sm:py-3 bg-accent text-accent-foreground rounded-sm font-medium disabled:opacity-50 text-sm sm:text-base flex items-center justify-center space-x-2"
                   >
-                    {isSubmitting ? 'Confirmation...' : 'Confirmer la réservation'}
+                    <CreditCard size={20} />
+                    <span>{isSubmitting ? 'Redirection vers le paiement...' : 'Procéder au paiement'}</span>
                   </button>
                 </form>
               </div>
