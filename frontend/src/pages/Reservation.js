@@ -326,7 +326,7 @@ export default function Reservation() {
             </motion.div>
           )}
 
-          {/* Step 3: Informations client */}
+          {/* Step 3: Informations client ET Paiement */}
           {step === 3 && selectedCreneau && (
             <motion.div key="step3" {...fadeInUp} data-testid="step-3">
               <div className="bg-white border border-border rounded-sm p-4 sm:p-6 md:p-8">
@@ -358,34 +358,13 @@ export default function Reservation() {
                 </div>
 
                 <h2 className="text-xl sm:text-2xl font-serif mb-4 sm:mb-6">Vos informations</h2>
-                
-                {/* Afficher le montant à payer */}
-                <div className="bg-accent/10 border border-accent/30 rounded-sm p-4 mb-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <CreditCard className="text-accent" size={20} />
-                      <span className="font-medium">Montant à payer</span>
-                    </div>
-                    <span className="text-2xl font-serif text-accent">{selectedPrestation.prix_euros}€</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Paiement sécurisé par Stripe • Politique d'annulation : remboursement complet si annulation plus de 48h avant le RDV
-                  </p>
-                </div>
 
-                <form
-                  data-testid="client-info-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSubmitReservation();
-                  }}
-                  className="space-y-3 sm:space-y-4"
-                >
+                {/* Formulaire client */}
+                <div className="space-y-4 mb-6">
                   <div>
                     <label className="block text-xs sm:text-sm font-medium mb-2">Nom complet *</label>
                     <input
                       type="text"
-                      data-testid="client-name-input"
                       required
                       value={clientInfo.nom}
                       onChange={(e) => setClientInfo({ ...clientInfo, nom: e.target.value })}
@@ -396,7 +375,6 @@ export default function Reservation() {
                     <label className="block text-xs sm:text-sm font-medium mb-2">Email *</label>
                     <input
                       type="email"
-                      data-testid="client-email-input"
                       required
                       value={clientInfo.email}
                       onChange={(e) => setClientInfo({ ...clientInfo, email: e.target.value })}
@@ -407,23 +385,40 @@ export default function Reservation() {
                     <label className="block text-xs sm:text-sm font-medium mb-2">Téléphone *</label>
                     <input
                       type="tel"
-                      data-testid="client-phone-input"
                       required
                       value={clientInfo.telephone}
                       onChange={(e) => setClientInfo({ ...clientInfo, telephone: e.target.value })}
                       className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring text-sm sm:text-base"
                     />
                   </div>
-                  <button
-                    type="submit"
-                    data-testid="confirm-reservation-button"
-                    disabled={isSubmitting}
-                    className="w-full btn-primary px-4 sm:px-6 py-2.5 sm:py-3 bg-accent text-accent-foreground rounded-sm font-medium disabled:opacity-50 text-sm sm:text-base flex items-center justify-center space-x-2"
-                  >
-                    <CreditCard size={20} />
-                    <span>{isSubmitting ? 'Redirection vers le paiement...' : 'Procéder au paiement'}</span>
-                  </button>
-                </form>
+                </div>
+
+                {/* Vérifier que toutes les infos sont remplies avant d'afficher le formulaire de carte */}
+                {clientInfo.nom && clientInfo.email && clientInfo.telephone ? (
+                  <Elements stripe={stripePromise}>
+                    <CardPaymentForm
+                      reservationData={{
+                        prestation_id: selectedPrestation.id,
+                        nom_client: clientInfo.nom,
+                        email_client: clientInfo.email,
+                        telephone_client: clientInfo.telephone,
+                        date: selectedDate.toISOString().split('T')[0],
+                        heure_debut: selectedCreneau.heure_debut,
+                        heure_fin: selectedCreneau.heure_fin
+                      }}
+                      montantTotal={parseFloat(selectedPrestation.prix_euros)}
+                      montantAcompte={parseFloat((parseFloat(selectedPrestation.prix_euros) * 0.3).toFixed(2))}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                    />
+                  </Elements>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-sm p-4 text-center">
+                    <p className="text-sm text-amber-800">
+                      Veuillez remplir tous les champs ci-dessus pour continuer
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
