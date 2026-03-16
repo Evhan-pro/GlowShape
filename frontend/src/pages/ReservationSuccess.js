@@ -6,34 +6,19 @@ import { Check, Calendar, Clock, User, CreditCard, Loader, Info } from 'lucide-r
 export default function ReservationSuccess() {
   const [searchParams] = useSearchParams();
   const [reservation, setReservation] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
-    
-    if (sessionId) {
-      // Confirmer le paiement avec le backend
-      fetch(`${process.env.REACT_APP_BACKEND_URL}/api/stripe/confirm-payment/${sessionId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setReservation(data.reservation);
-          } else {
-            setError('Le paiement n\'a pas pu être confirmé');
-          }
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Erreur:', err);
-          setError('Erreur de connexion au serveur');
-          setLoading(false);
-        });
+    // La réservation est passée via l'état de navigation
+    const reservationData = JSON.parse(sessionStorage.getItem('reservation_success'));
+    if (reservationData) {
+      setReservation(reservationData);
+      sessionStorage.removeItem('reservation_success'); // Nettoyer
     } else {
-      setError('Session de paiement introuvable');
-      setLoading(false);
+      setError('Aucune réservation trouvée');
     }
-  }, [searchParams]);
+  }, []);
 
   if (loading) {
     return (
