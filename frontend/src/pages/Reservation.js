@@ -382,6 +382,21 @@ export default function Reservation() {
                 </div>
 
                 <h2 className="text-xl sm:text-2xl font-serif mb-4 sm:mb-6">Vos informations</h2>
+                
+                {/* Afficher le montant à payer */}
+                <div className="bg-accent/10 border border-accent/30 rounded-sm p-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <CreditCard className="text-accent" size={20} />
+                      <span className="font-medium">Montant à payer</span>
+                    </div>
+                    <span className="text-2xl font-serif text-accent">{selectedPrestation.prix_euros}€</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Paiement sécurisé par Stripe • Politique d'annulation : remboursement complet si annulation plus de 48h avant le RDV
+                  </p>
+                </div>
+
                 <form
                   data-testid="client-info-form"
                   onSubmit={(e) => {
