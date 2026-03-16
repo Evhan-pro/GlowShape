@@ -2,6 +2,9 @@ const { app } = require('./server');
 const routes = require('./routes');
 const stripeRoutes = require('./stripe-routes');
 
+// Activer la tâche CRON pour les paiements différés
+require('./cron-payment');
+
 const path = require('path');
 app.use('/uploads', require('express').static(path.join(__dirname, 'uploads')));
 app.use('/api', routes);

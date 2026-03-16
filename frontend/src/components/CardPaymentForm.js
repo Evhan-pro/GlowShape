@@ -8,23 +8,19 @@ const CARD_ELEMENT_OPTIONS = {
     base: {
       fontSize: '16px',
       color: '#424770',
-      '::placeholder': {
-        color: '#aab7c4',
-      },
+      '::placeholder': { color: '#aab7c4' },
       fontFamily: 'system-ui, -apple-system, sans-serif',
     },
-    invalid: {
-      color: '#9e2146',
-    },
+    invalid: { color: '#9e2146' },
   },
 };
 
-export default function CardPaymentForm({ 
-  reservationData, 
-  montantTotal, 
-  montantAcompte, 
-  onSuccess, 
-  onError 
+export default function CardPaymentForm({
+  reservationData,
+  montantTotal,
+  montantAcompte,
+  onSuccess,
+  onError
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -34,16 +30,13 @@ export default function CardPaymentForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
+    if (!stripe || !elements) return;
 
     setIsProcessing(true);
     setErrorMessage('');
 
     try {
-      // 1. Créer le Setup Intent
+      // ÉTAPE 1 : Créer le Setup Intent (PAS de réservation)
       const setupResponse = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/api/stripe/create-setup-intent`,
         {
@@ -54,12 +47,13 @@ export default function CardPaymentForm({
       );
 
       if (!setupResponse.ok) {
-        throw new Error('Erreur lors de la création du Setup Intent');
+        const errData = await setupResponse.json().catch(() => ({}));
+        throw new Error(errData.error || 'Erreur lors de la préparation du paiement');
       }
 
-      const { clientSecret, reservationId } = await setupResponse.json();
+      const { clientSecret, setupIntentId, customerId } = await setupResponse.json();
 
-      // 2. Confirmer le Setup Intent avec la carte
+      // ÉTAPE 2 : Confirmer la carte avec Stripe
       const { setupIntent, error: stripeError } = await stripe.confirmCardSetup(
         clientSecret,
         {
@@ -78,58 +72,60 @@ export default function CardPaymentForm({
         throw new Error(stripeError.message);
       }
 
-      // 3. Confirmer l'enregistrement de la carte avec le backend
+      // ÉTAPE 3 : Carte validée ! Maintenant créer la réservation
       const confirmResponse = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/stripe/confirm-card-registration/${reservationId}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/stripe/confirm-and-book`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            payment_method_id: setupIntent.payment_method
+            setup_intent_id: setupIntentId,
+            payment_method_id: setupIntent.payment_method,
+            customer_id: customerId,
+            ...reservationData
           })
         }
       );
 
+      const confirmData = await confirmResponse.json();
+
       if (!confirmResponse.ok) {
-        throw new Error('Erreur lors de la confirmation');
+        throw new Error(confirmData.error || 'Erreur lors de la confirmation');
       }
 
-      const data = await confirmResponse.json();
-      
-      // Stocker la réservation pour la page de succès
-      sessionStorage.setItem('reservation_success', JSON.stringify(data.reservation));
-      
-      // Rediriger vers la page de succès
+      // Stocker pour la page de succès
+      sessionStorage.setItem('reservation_success', JSON.stringify(confirmData.reservation));
+      onSuccess(confirmData.reservation);
       navigate('/reservation-success');
 
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur paiement:', error);
       setErrorMessage(error.message);
-      onError(error);
+      if (onError) onError(error);
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Information importante */}
+    <form onSubmit={handleSubmit} data-testid="card-payment-form" className="space-y-6">
+      {/* Info paiement différé */}
       <div className="bg-blue-50 border border-blue-200 rounded-sm p-4">
         <div className="flex items-start space-x-3">
           <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
           <div className="text-sm">
-            <p className="font-medium text-blue-900 mb-2">ℹ️ Comment fonctionne le paiement ?</p>
+            <p className="font-medium text-blue-900 mb-2">Comment fonctionne le paiement ?</p>
             <ul className="text-blue-800 space-y-1 text-xs">
-              <li>• Votre carte sera <strong>enregistrée de manière sécurisée</strong></li>
-              <li>• <strong>Aucun débit immédiat</strong></li>
-              <li>• Le <strong>jour de votre RDV à 8h00</strong>, l'acompte de <strong>{montantAcompte}€ (30%)</strong> sera automatiquement débité</li>
-              <li>• Les <strong>{(montantTotal - montantAcompte).toFixed(2)}€ restants (70%)</strong> seront à régler au salon</li>
+              <li>Votre carte sera <strong>enregistrée de maniere securisee</strong></li>
+              <li><strong>Aucun debit immediat</strong></li>
+              <li>Le <strong>jour de votre RDV a 8h00</strong>, l'acompte de <strong>{montantAcompte.toFixed(2)}€ (30%)</strong> sera automatiquement debite</li>
+              <li>Les <strong>{(montantTotal - montantAcompte).toFixed(2)}€ restants (70%)</strong> seront a regler au salon</li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Montants */}
+      {/* Recapitulatif montants */}
       <div className="bg-secondary/30 rounded-sm p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -137,17 +133,17 @@ export default function CardPaymentForm({
             <span className="font-medium">{montantTotal.toFixed(2)}€</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Acompte (débité le jour J) :</span>
-            <span className="font-medium text-accent">{montantAcompte}€ (30%)</span>
+            <span className="text-muted-foreground">Acompte (debite le jour J) :</span>
+            <span className="font-medium text-accent">{montantAcompte.toFixed(2)}€ (30%)</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">À payer au salon :</span>
+            <span className="text-muted-foreground">A payer au salon :</span>
             <span className="font-medium">{(montantTotal - montantAcompte).toFixed(2)}€ (70%)</span>
           </div>
         </div>
       </div>
 
-      {/* Formulaire carte */}
+      {/* Champ carte */}
       <div>
         <label className="block text-sm font-medium mb-2 flex items-center space-x-2">
           <CreditCard size={18} />
@@ -157,35 +153,36 @@ export default function CardPaymentForm({
           <CardElement options={CARD_ELEMENT_OPTIONS} />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          🔒 Paiement sécurisé par Stripe • Aucune donnée stockée sur nos serveurs
+          Paiement securise par Stripe - Aucune donnee stockee sur nos serveurs
         </p>
       </div>
 
       {/* Politique d'annulation */}
       <div className="bg-amber-50 border border-amber-200 rounded-sm p-3">
         <p className="text-xs text-amber-900">
-          <strong>Politique d'annulation :</strong> Annulation gratuite si faite plus de 48h avant le RDV. 
-          Si annulation moins de 48h avant, l'acompte de {montantAcompte}€ sera débité.
+          <strong>Politique d'annulation :</strong> Annulation gratuite si effectuee plus de 48h avant le RDV.
+          Annulation a moins de 48h : l'acompte de {montantAcompte.toFixed(2)}€ sera debite.
         </p>
       </div>
 
-      {/* Message d'erreur */}
+      {/* Erreur */}
       {errorMessage && (
-        <div className="bg-red-50 border border-red-200 rounded-sm p-3">
+        <div data-testid="payment-error" className="bg-red-50 border border-red-200 rounded-sm p-3">
           <p className="text-sm text-red-800">{errorMessage}</p>
         </div>
       )}
 
-      {/* Bouton de soumission */}
+      {/* Bouton */}
       <button
         type="submit"
+        data-testid="confirm-card-button"
         disabled={!stripe || isProcessing}
         className="w-full btn-primary px-6 py-3 bg-accent text-accent-foreground rounded-sm font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
       >
         {isProcessing ? (
           <>
             <Loader className="animate-spin" size={20} />
-            <span>Enregistrement en cours...</span>
+            <span>Verification en cours...</span>
           </>
         ) : (
           <>
