@@ -83,11 +83,24 @@ export default function ReservationSuccess() {
           </div>
 
           {/* Titre */}
-          <h1 className="text-2xl sm:text-3xl font-serif mb-4">Paiement Confirmé !</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif mb-4">Carte Enregistrée !</h1>
           <p className="text-muted-foreground mb-8 text-sm sm:text-base">
-            Votre réservation a été confirmée et payée avec succès. 
+            Votre réservation a été confirmée et votre carte enregistrée avec succès. 
             Un email de confirmation vous a été envoyé à <strong>{reservation?.email_client}</strong>
           </p>
+
+          {/* Information importante sur le paiement */}
+          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-6 text-left">
+            <h3 className="font-medium mb-2 text-sm flex items-center space-x-2">
+              <Info className="text-blue-600" size={18} />
+              <span>Comment se déroule le paiement ?</span>
+            </h3>
+            <ul className="text-xs text-blue-800 space-y-1">
+              <li>• <strong>Aujourd'hui</strong> : Aucun débit, votre carte est juste enregistrée</li>
+              <li>• <strong>Le jour de votre RDV à 8h00</strong> : L'acompte de {reservation?.montant_acompte}€ (30%) sera automatiquement débité</li>
+              <li>• <strong>Au salon</strong> : Vous réglez les {reservation ? (parseFloat(reservation.montant_total) - parseFloat(reservation.montant_acompte)).toFixed(2) : 0}€ restants (70%)</li>
+            </ul>
+          </div>
 
           {/* Détails de la réservation */}
           {reservation && (
@@ -129,8 +142,12 @@ export default function ReservationSuccess() {
                 <div className="flex items-start space-x-3">
                   <CreditCard size={20} className="text-accent flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">Montant payé</p>
-                    <p className="font-medium text-accent text-xl">{reservation.montant_total}€</p>
+                    <p className="text-sm text-muted-foreground">Montants</p>
+                    <div className="space-y-1">
+                      <p className="font-medium">Total : {reservation.montant_total}€</p>
+                      <p className="text-sm text-accent">Acompte (débité le jour J) : {reservation.montant_acompte}€</p>
+                      <p className="text-sm">À payer au salon : {(parseFloat(reservation.montant_total) - parseFloat(reservation.montant_acompte)).toFixed(2)}€</p>
+                    </div>
                   </div>
                 </div>
 
@@ -146,11 +163,11 @@ export default function ReservationSuccess() {
           )}
 
           {/* Politique d'annulation */}
-          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4 mb-8 text-left">
+          <div className="bg-amber-50 border border-amber-200 rounded-sm p-4 mb-8 text-left">
             <h3 className="font-medium mb-2 text-sm">💡 Politique d'annulation</h3>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Annulation plus de 48h avant : remboursement complet (100%)</li>
-              <li>• Annulation moins de 48h avant : remboursement partiel (70%, acompte de 30% conservé)</li>
+            <ul className="text-xs text-amber-900 space-y-1">
+              <li>• Annulation plus de 48h avant : <strong>gratuite</strong>, aucun débit</li>
+              <li>• Annulation moins de 48h avant : <strong>acompte de {reservation?.montant_acompte}€ débité</strong></li>
             </ul>
           </div>
 
