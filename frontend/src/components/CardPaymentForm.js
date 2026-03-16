@@ -95,7 +95,12 @@ export default function CardPaymentForm({
       }
 
       const data = await confirmResponse.json();
-      onSuccess(data.reservation);
+      
+      // Stocker la réservation pour la page de succès
+      sessionStorage.setItem('reservation_success', JSON.stringify(data.reservation));
+      
+      // Rediriger vers la page de succès
+      navigate('/reservation-success');
 
     } catch (error) {
       console.error('Erreur:', error);
