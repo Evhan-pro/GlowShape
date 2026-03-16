@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Calendar, Clock, User, CreditCard, Loader } from 'lucide-react';
+import { Check, Calendar, Clock, User, CreditCard, Loader, Info } from 'lucide-react';
 
 export default function ReservationSuccess() {
   const [searchParams] = useSearchParams();
