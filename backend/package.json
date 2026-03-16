@@ -19,6 +19,8 @@
     "googleapis": "^170.1.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.12",
     "pg": "^8.17.1",
     "sequelize": "^6.37.7",
