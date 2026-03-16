@@ -32,13 +32,19 @@ export default function Reservation() {
   const [reservationConfirmed, setReservationConfirmed] = useState(false);
   const [reservationDetails, setReservationDetails] = useState(null);
 
-  // Générer les dates disponibles (7 prochains jours)
+  // Générer les dates disponibles (AVEC RESTRICTION 48H)
   const generateAvailableDates = () => {
     const dates = [];
-    const today = new Date();
+    const now = new Date();
+    
+    // Ajouter 48 heures (2 jours) au minimum
+    const minDate = new Date(now);
+    minDate.setHours(now.getHours() + 48);
+    
+    // Générer 14 dates à partir de minDate
     for (let i = 0; i < 14; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      const date = new Date(minDate);
+      date.setDate(minDate.getDate() + i);
       // Exclure les dimanches (jour 0)
       if (date.getDay() !== 0) {
         dates.push(date);
