@@ -108,26 +108,29 @@ export default function Reservation() {
         email_client: clientInfo.email,
         telephone_client: clientInfo.telephone,
         date: dateStr,
-        heure_debut: selectedCreneau.heure_debut
+        heure_debut: selectedCreneau.heure_debut,
+        heure_fin: selectedCreneau.heure_fin
       };
 
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/reservations`, {
+      // Créer la session de paiement Stripe
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reservationData)
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setReservationDetails(data);
-        setReservationConfirmed(true);
+        const { url } = await response.json();
+        // Rediriger vers Stripe Checkout
+        window.location.href = url;
       } else {
         const error = await response.json();
-        alert(error.detail || 'Une erreur est survenue');
+        alert(error.error || 'Une erreur est survenue lors de la création du paiement');
+        setIsSubmitting(false);
       }
     } catch (error) {
-      alert('Erreur de connexion');
-    } finally {
+      console.error('Erreur:', error);
+      alert('Erreur de connexion au serveur');
       setIsSubmitting(false);
     }
   };
