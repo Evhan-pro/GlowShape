@@ -17,6 +17,7 @@ const fadeInUp = {
 
 export default function Reservation() {
   const location = useLocation();
+  const navigate = useNavigate();
   const prestationIdFromState = location.state?.prestationId;
 
   const [step, setStep] = useState(1);
