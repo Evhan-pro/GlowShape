@@ -32,8 +32,6 @@ export default function Reservation() {
     telephone: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reservationConfirmed, setReservationConfirmed] = useState(false);
-  const [reservationDetails, setReservationDetails] = useState(null);
 
   // Générer les dates disponibles (AVEC RESTRICTION 48H)
   const generateAvailableDates = () => {
