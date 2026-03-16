@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Check, Calendar, Clock, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Calendar, Clock, User, CreditCard } from 'lucide-react';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY);
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
