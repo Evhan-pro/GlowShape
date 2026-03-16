@@ -115,7 +115,7 @@ router.get('/homepage-content', async (req, res) => {
 // Témoignages (public)
 router.get('/temoignages', async (req, res) => {
   try {
-    const items = await Temoignage.findAll({ order: [['createdAt', 'DESC']] });
+    const items = await Temoignage.findAll({ order: [['created_at', 'DESC']] });
     res.json(items);
   } catch (e) {
     res.status(500).json({ detail: e.message });

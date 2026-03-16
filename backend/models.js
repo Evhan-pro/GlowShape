@@ -157,7 +157,7 @@ async function seedPrestations() {
 }
 
 async function initDatabase() {
-  await sequelize.sync();
+  await sequelize.sync({ alter: true });
   console.log('✓ Database synced');
   await seedPrestations();
 }

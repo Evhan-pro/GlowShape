@@ -80,9 +80,10 @@ export default function Reservation() {
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/prestations`);
       const data = await response.json();
-      setPrestations(data);
+      setPrestations(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erreur:', error);
+      setPrestations([]);
     }
   };
 
@@ -93,9 +94,10 @@ export default function Reservation() {
         `${process.env.REACT_APP_BACKEND_URL}/api/disponibilites?date=${dateStr}&prestation_id=${selectedPrestation.id}`
       );
       const data = await response.json();
-      setCreneaux(data.creneaux);
+      setCreneaux(Array.isArray(data.creneaux) ? data.creneaux : []);
     } catch (error) {
       console.error('Erreur:', error);
+      setCreneaux([]);
     }
   };
 

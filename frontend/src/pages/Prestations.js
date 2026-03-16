@@ -33,9 +33,10 @@ export default function Prestations() {
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/categories`);
       const data = await response.json();
-      setCategories(data.categories);
+      setCategories(Array.isArray(data.categories) ? data.categories : []);
     } catch (error) {
       console.error('Erreur:', error);
+      setCategories([]);
     }
   };
 
@@ -43,10 +44,13 @@ export default function Prestations() {
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/prestations`);
       const data = await response.json();
-      setPrestations(data);
-      setFilteredPrestations(data);
+      const list = Array.isArray(data) ? data : [];
+      setPrestations(list);
+      setFilteredPrestations(list);
     } catch (error) {
       console.error('Erreur:', error);
+      setPrestations([]);
+      setFilteredPrestations([]);
     }
   };
 
