@@ -94,9 +94,8 @@ export default function CardPaymentForm({
       }
 
       // Stocker pour la page de succès
-      sessionStorage.setItem('reservation_success', JSON.stringify(confirmData.reservation));
       onSuccess(confirmData.reservation);
-      navigate('/reservation-success');
+      navigate('/reservation-success', { state: { reservation: confirmData.reservation } });
 
     } catch (error) {
       console.error('Erreur paiement:', error);

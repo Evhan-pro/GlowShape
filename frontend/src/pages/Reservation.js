@@ -237,7 +237,7 @@ export default function Reservation() {
                   <div data-testid="creneaux-container">
                     <h3 className="text-lg sm:text-xl font-serif mb-3 sm:mb-4">Créneaux disponibles</h3>
                     {creneaux.length > 0 ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
                         {creneaux.map((creneau, index) => (
                           <button
                             key={index}
@@ -246,13 +246,14 @@ export default function Reservation() {
                             disabled={!creneau.disponible}
                             className={`p-2 sm:p-3 border rounded-sm text-xs sm:text-sm transition-colors ${
                               !creneau.disponible
-                                ? 'opacity-30 cursor-not-allowed'
+                                ? 'opacity-30 cursor-not-allowed line-through'
                                 : selectedCreneau?.heure_debut === creneau.heure_debut
                                 ? 'border-accent bg-accent text-accent-foreground'
                                 : 'border-border hover:border-accent'
                             }`}
                           >
-                            {creneau.heure_debut}
+                            <span className="font-medium">{creneau.heure_debut}</span>
+                            <span className="text-[10px] sm:text-xs opacity-70"> - {creneau.heure_fin}</span>
                           </button>
                         ))}
                       </div>
