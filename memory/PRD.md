@@ -17,26 +17,37 @@ Application de reservation pour un institut de beaute "Glow & Shape" avec gestio
 - Validation input sur tous les endpoints sensibles
 - JWT 8h, validation token renforcee
 - Fail fast si variables critiques manquantes
-- Toutes les cles dans .env
 
 ## Flux de Paiement Differe
-1. `POST /api/stripe/create-setup-intent` -> Client Stripe + SetupIntent (PAS de reservation)
-2. Frontend: `stripe.confirmCardSetup()` -> Valide la carte
-3. `POST /api/stripe/confirm-and-book` -> Verifie succeeded + anti-double-booking -> Cree reservation
+1. create-setup-intent -> Client Stripe + SetupIntent (PAS de reservation)
+2. Frontend: stripe.confirmCardSetup() -> Valide la carte
+3. confirm-and-book -> Verifie succeeded + anti-double-booking -> Cree reservation
 4. CRON (8h00 jour J): Debite acompte 30%
 5. Annulation >48h: gratuite. Annulation <48h: acompte debite.
 
-## Tests Valides (18/18 + testing agent 100%)
-- Listing prestations (14), Categories (5), Disponibilites (19 creneaux)
-- Restriction 48h, Setup Intent sans reservation, Rejet sans carte
-- Validation input, Reservation confirmee, Creneaux bloques
-- Anti-double-booking, Annulation >48h gratuite, Annulation <48h penalite
-- Creneaux liberes apres annulation, CRON debit, Securite headers
-- Frontend: homepage, prestations, reservation 3 etapes, admin, mobile responsive
+## Bugs Corriges (Session actuelle)
+- [x] PostgreSQL reinstalle et stabilise
+- [x] filteredPrestations.map is not a function
+- [x] Cannot read properties of undefined (reading length)
+- [x] Images hero/about cassees
+- [x] Reservations creees meme si paiement echoue
+- [x] Message d'erreur apres reservation reussie (sessionStorage -> React Router state)
+- [x] Creneaux affichaient seulement l'heure de debut (maintenant debut-fin)
+- [x] CORS cluster origins
+- [x] Rate limiter proxy config
+
+## Fonctionnalites Implementees
+- [x] Site responsive
+- [x] Listing prestations avec filtres
+- [x] Flux reservation 3 etapes
+- [x] Restriction 48h
+- [x] Paiement differe Stripe
+- [x] CRON debit automatique
+- [x] Annulation avec logique 48h
+- [x] Anti-double-booking
+- [x] Securite maximale
+- [x] Page succes reservation (React Router state)
 
 ## Taches Restantes
 ### P2 - Futur
 - [ ] Gestion des categories de prestations (CRUD + page admin)
-
-## Credentials
-- Admin: admin@glowshape.fr / admin123
