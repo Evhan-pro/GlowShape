@@ -30,18 +30,32 @@ const allowedOrigins = [
   'http://localhost:3000'
 ].filter(Boolean);
 
+// Add cluster origins dynamically
+const clusterPattern = /^https:\/\/glowshape-fix\.cluster-\d+\.preview\.emergentcf\.cloud$/;
+
+console.log('Allowed CORS origins:', allowedOrigins);
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS non autorise'));
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) {
+      return callback(null, true);
     }
+    // Check if origin matches any allowed origin or cluster pattern
+    const isAllowed = allowedOrigins.some(allowed => origin === allowed || origin.startsWith(allowed)) || clusterPattern.test(origin);
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    console.log('CORS rejected origin:', origin);
+    callback(new Error('CORS non autorise'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Trust proxy for rate limiting behind reverse proxy
+app.set('trust proxy', 1);
 
 // Rate limiting global
 const globalLimiter = rateLimit({
@@ -49,7 +63,8 @@ const globalLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Trop de requetes, veuillez reessayer plus tard' }
+  message: { error: 'Trop de requetes, veuillez reessayer plus tard' },
+  validate: { xForwardedForHeader: false }
 });
 app.use('/api', globalLimiter);
 
@@ -57,7 +72,8 @@ app.use('/api', globalLimiter);
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  message: { error: 'Trop de tentatives de connexion. Reessayez dans 15 minutes.' }
+  message: { error: 'Trop de tentatives de connexion. Reessayez dans 15 minutes.' },
+  validate: { xForwardedForHeader: false }
 });
 app.use('/api/admin/login', loginLimiter);
 
@@ -65,7 +81,8 @@ app.use('/api/admin/login', loginLimiter);
 const stripeLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 15,
-  message: { error: 'Trop de tentatives de paiement. Reessayez dans quelques minutes.' }
+  message: { error: 'Trop de tentatives de paiement. Reessayez dans quelques minutes.' },
+  validate: { xForwardedForHeader: false }
 });
 app.use('/api/stripe/create-setup-intent', stripeLimiter);
 app.use('/api/stripe/confirm-and-book', stripeLimiter);
