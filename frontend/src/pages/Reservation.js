@@ -76,6 +76,11 @@ export default function Reservation() {
     }
   }, [selectedDate, selectedPrestation]);
 
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   const fetchPrestations = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/prestations`);

@@ -1,37 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { Save, Building, Clock, Share2 } from 'lucide-react';
-
-const joursNoms = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-const joursLabels = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-
-const defaultHoraires = {
-  lundi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
-  mardi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
-  mercredi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
-  jeudi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
-  vendredi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
-  samedi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
-  dimanche: { ouvert: false, ouverture: '09:00', fermeture: '19:00' }
-};
+import { Save, Building, MapPin, Phone, Mail, Globe, Clock, Loader } from 'lucide-react';
 
 export default function AdminParametres() {
-  const { getAuthHeaders } = useAuth();
-  const [formData, setFormData] = useState({
-    nom_institut: 'Glow & Shape',
-    adresse: '',
-    ville: '',
-    telephone: '',
-    email: '',
-    facebook_url: '',
-    instagram_url: '',
-    horaires_defaut: defaultHoraires
+  const [settings, setSettings] = useState({
+    nom_institut: '', adresse: '', ville: '', telephone: '', email: '',
+    facebook_url: '', instagram_url: '', horaires_defaut: null
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+
+  const defaultHoraires = {
+    lundi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
+    mardi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
+    mercredi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
+    jeudi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
+    vendredi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
+    samedi: { ouvert: true, ouverture: '09:00', fermeture: '19:00' },
+    dimanche: { ouvert: false, ouverture: '09:00', fermeture: '19:00' }
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -39,251 +28,187 @@ export default function AdminParametres() {
 
   const fetchSettings = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/site-settings`);
-      const data = response.data;
-      setFormData({
-        nom_institut: data.nom_institut || 'Glow & Shape',
-        adresse: data.adresse || '',
-        ville: data.ville || '',
-        telephone: data.telephone || '',
-        email: data.email || '',
-        facebook_url: data.facebook_url || '',
-        instagram_url: data.instagram_url || '',
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/site-settings`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setSettings({
+        ...data,
         horaires_defaut: data.horaires_defaut || defaultHoraires
       });
-    } catch (error) {
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError('Erreur chargement parametres');
     }
+    setLoading(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSave = async () => {
     setSaving(true);
-    setMessage('');
+    setError('');
+    setSuccess('');
     try {
-      await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/admin/site-settings`,
-        formData,
-        { headers: getAuthHeaders() }
-      );
-      setMessage('Paramètres enregistrés avec succès !');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      console.error('Erreur:', error);
-      setMessage('Erreur lors de l\'enregistrement');
-    } finally {
-      setSaving(false);
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/site-settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(settings)
+      });
+      if (!res.ok) throw new Error('Erreur sauvegarde');
+      setSuccess('Parametres sauvegardes !');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.message);
     }
+    setSaving(false);
   };
 
   const updateHoraire = (jour, field, value) => {
-    setFormData(prev => ({
+    setSettings(prev => ({
       ...prev,
       horaires_defaut: {
-        ...prev.horaires_defaut,
-        [jour]: {
-          ...prev.horaires_defaut[jour],
-          [field]: value
-        }
+        ...(prev.horaires_defaut || defaultHoraires),
+        [jour]: { ...(prev.horaires_defaut || defaultHoraires)[jour], [field]: value }
       }
     }));
   };
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent"></div>
-        </div>
-      </AdminLayout>
-    );
-  }
+  const jours = [
+    { key: 'lundi', label: 'Lundi' },
+    { key: 'mardi', label: 'Mardi' },
+    { key: 'mercredi', label: 'Mercredi' },
+    { key: 'jeudi', label: 'Jeudi' },
+    { key: 'vendredi', label: 'Vendredi' },
+    { key: 'samedi', label: 'Samedi' },
+    { key: 'dimanche', label: 'Dimanche' }
+  ];
+
+  if (loading) return <AdminLayout><div className="flex justify-center p-12"><Loader className="animate-spin" size={32} /></div></AdminLayout>;
+
+  const horaires = settings.horaires_defaut || defaultHoraires;
 
   return (
     <AdminLayout>
-      <div>
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-serif">Paramètres du Site</h1>
+      <div data-testid="admin-parametres" className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h1 className="text-xl sm:text-2xl font-serif">Parametres du site</h1>
           <button
-            onClick={handleSubmit}
-            disabled={saving}
-            data-testid="save-settings-btn"
-            className="flex items-center space-x-2 bg-accent text-accent-foreground px-4 py-2 rounded-sm hover:opacity-90 disabled:opacity-50"
+            data-testid="save-settings-btn" onClick={handleSave} disabled={saving}
+            className="flex items-center space-x-2 bg-accent text-accent-foreground px-4 py-2 rounded-sm text-sm font-medium disabled:opacity-50"
           >
-            <Save size={20} />
-            <span>{saving ? 'Enregistrement...' : 'Enregistrer'}</span>
+            {saving ? <Loader className="animate-spin" size={16} /> : <Save size={16} />}
+            <span>{saving ? 'Sauvegarde...' : 'Sauvegarder'}</span>
           </button>
         </div>
 
-        {message && (
-          <div className={`mb-6 p-4 rounded-sm ${message.includes('Erreur') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-            {message}
-          </div>
-        )}
+        {success && <div className="bg-green-50 border border-green-200 rounded-sm p-3 text-green-800 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 border border-red-200 rounded-sm p-3 text-red-800 text-sm">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Informations générales */}
-          <div className="bg-white border border-border rounded-sm p-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <Building className="text-accent" size={24} />
-              <h2 className="text-xl font-serif">Informations de l'Institut</h2>
+        {/* Informations generales */}
+        <div className="bg-white border border-border rounded-sm p-5 sm:p-6">
+          <h2 className="flex items-center space-x-2 text-lg font-medium mb-4">
+            <Building size={20} className="text-accent" />
+            <span>Informations generales</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Nom de l'institut</label>
+              <input data-testid="setting-nom" type="text" value={settings.nom_institut || ''} onChange={e => setSettings({...settings, nom_institut: e.target.value})}
+                className="w-full px-3 py-2 border border-input rounded-sm text-sm" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Nom de l'institut</label>
-                <input
-                  type="text"
-                  value={formData.nom_institut}
-                  onChange={(e) => setFormData({ ...formData, nom_institut: e.target.value })}
-                  data-testid="nom-institut-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Glow & Shape"
-                />
+            <div>
+              <label className="block text-sm font-medium mb-1">Telephone</label>
+              <div className="flex items-center space-x-2">
+                <Phone size={16} className="text-muted-foreground" />
+                <input data-testid="setting-telephone" type="text" value={settings.telephone || ''} onChange={e => setSettings({...settings, telephone: e.target.value})}
+                  className="w-full px-3 py-2 border border-input rounded-sm text-sm" />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Téléphone</label>
-                <input
-                  type="tel"
-                  value={formData.telephone}
-                  onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                  data-testid="telephone-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="01 23 45 67 89"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  data-testid="email-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="contact@glowandshape.fr"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Adresse</label>
-                <input
-                  type="text"
-                  value={formData.adresse}
-                  onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-                  data-testid="adresse-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="123 Avenue de la Beauté"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Ville (Code postal + Ville)</label>
-                <input
-                  type="text"
-                  value={formData.ville}
-                  onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
-                  data-testid="ville-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="75001 Paris"
-                />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <div className="flex items-center space-x-2">
+                <Mail size={16} className="text-muted-foreground" />
+                <input data-testid="setting-email" type="email" value={settings.email || ''} onChange={e => setSettings({...settings, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-input rounded-sm text-sm" />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Horaires par défaut */}
-          <div className="bg-white border border-border rounded-sm p-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <Clock className="text-accent" size={24} />
-              <div>
-                <h2 className="text-xl font-serif">Horaires par défaut</h2>
-                <p className="text-sm text-muted-foreground">Ces horaires s'affichent dans le footer et servent de base pour les disponibilités</p>
-              </div>
+        {/* Adresse */}
+        <div className="bg-white border border-border rounded-sm p-5 sm:p-6">
+          <h2 className="flex items-center space-x-2 text-lg font-medium mb-4">
+            <MapPin size={20} className="text-accent" />
+            <span>Adresse (affichee sur le site + carte contact)</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Adresse</label>
+              <input data-testid="setting-adresse" type="text" value={settings.adresse || ''} onChange={e => setSettings({...settings, adresse: e.target.value})}
+                className="w-full px-3 py-2 border border-input rounded-sm text-sm" placeholder="Espace Anjou" />
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {joursNoms.map((jour, index) => {
-                const horaire = formData.horaires_defaut[jour] || { ouvert: true, ouverture: '09:00', fermeture: '19:00' };
-                return (
-                  <div
-                    key={jour}
-                    className={`border rounded-sm p-4 ${horaire.ouvert ? 'border-border' : 'border-red-200 bg-red-50/30'}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium">{joursLabels[index]}</h3>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={horaire.ouvert}
-                          onChange={(e) => updateHoraire(jour, 'ouvert', e.target.checked)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm">Ouvert</span>
-                      </label>
-                    </div>
-                    
-                    {horaire.ouvert ? (
-                      <div className="space-y-2">
-                        <div>
-                          <label className="block text-xs text-muted-foreground mb-1">Ouverture</label>
-                          <input
-                            type="time"
-                            value={horaire.ouverture}
-                            onChange={(e) => updateHoraire(jour, 'ouverture', e.target.value)}
-                            className="w-full px-2 py-1 border border-input rounded-sm text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-muted-foreground mb-1">Fermeture</label>
-                          <input
-                            type="time"
-                            value={horaire.fermeture}
-                            onChange={(e) => updateHoraire(jour, 'fermeture', e.target.value)}
-                            className="w-full px-2 py-1 border border-input rounded-sm text-sm"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-muted-foreground text-sm">
-                        Fermé
-                      </div>
-                    )}
+            <div>
+              <label className="block text-sm font-medium mb-1">Ville / Code postal</label>
+              <input data-testid="setting-ville" type="text" value={settings.ville || ''} onChange={e => setSettings({...settings, ville: e.target.value})}
+                className="w-full px-3 py-2 border border-input rounded-sm text-sm" placeholder="49000 Angers" />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            L'adresse est utilisee pour la carte interactive sur la page Contact.
+          </p>
+        </div>
+
+        {/* Reseaux sociaux */}
+        <div className="bg-white border border-border rounded-sm p-5 sm:p-6">
+          <h2 className="flex items-center space-x-2 text-lg font-medium mb-4">
+            <Globe size={20} className="text-accent" />
+            <span>Reseaux sociaux</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Facebook (URL)</label>
+              <input data-testid="setting-facebook" type="url" value={settings.facebook_url || ''} onChange={e => setSettings({...settings, facebook_url: e.target.value})}
+                className="w-full px-3 py-2 border border-input rounded-sm text-sm" placeholder="https://facebook.com/..." />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Instagram (URL)</label>
+              <input data-testid="setting-instagram" type="url" value={settings.instagram_url || ''} onChange={e => setSettings({...settings, instagram_url: e.target.value})}
+                className="w-full px-3 py-2 border border-input rounded-sm text-sm" placeholder="https://instagram.com/..." />
+            </div>
+          </div>
+        </div>
+
+        {/* Horaires */}
+        <div className="bg-white border border-border rounded-sm p-5 sm:p-6">
+          <h2 className="flex items-center space-x-2 text-lg font-medium mb-4">
+            <Clock size={20} className="text-accent" />
+            <span>Horaires d'ouverture</span>
+          </h2>
+          <div className="space-y-3">
+            {jours.map(({ key, label }) => (
+              <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-2 border-b border-border last:border-0">
+                <div className="w-28 font-medium text-sm">{label}</div>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox" checked={horaires[key]?.ouvert ?? true}
+                    onChange={e => updateHoraire(key, 'ouvert', e.target.checked)}
+                    className="accent-accent"
+                  />
+                  <span className="text-sm">{horaires[key]?.ouvert ? 'Ouvert' : 'Ferme'}</span>
+                </label>
+                {horaires[key]?.ouvert && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <input type="time" value={horaires[key]?.ouverture || '09:00'} onChange={e => updateHoraire(key, 'ouverture', e.target.value)}
+                      className="px-2 py-1 border border-input rounded-sm" />
+                    <span>-</span>
+                    <input type="time" value={horaires[key]?.fermeture || '19:00'} onChange={e => updateHoraire(key, 'fermeture', e.target.value)}
+                      className="px-2 py-1 border border-input rounded-sm" />
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Réseaux sociaux */}
-          <div className="bg-white border border-border rounded-sm p-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <Share2 className="text-accent" size={24} />
-              <h2 className="text-xl font-serif">Réseaux Sociaux</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Facebook</label>
-                <input
-                  type="url"
-                  value={formData.facebook_url}
-                  onChange={(e) => setFormData({ ...formData, facebook_url: e.target.value })}
-                  data-testid="facebook-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="https://facebook.com/glowandshape"
-                />
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Instagram</label>
-                <input
-                  type="url"
-                  value={formData.instagram_url}
-                  onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
-                  data-testid="instagram-input"
-                  className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="https://instagram.com/glowandshape"
-                />
-              </div>
-            </div>
+            ))}
           </div>
-        </form>
+        </div>
       </div>
     </AdminLayout>
   );

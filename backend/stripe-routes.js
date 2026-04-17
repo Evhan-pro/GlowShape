@@ -10,6 +10,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { Op } = require('sequelize');
 const { Reservation, Prestation } = require('./models');
+const { sendReservationConfirmation } = require('./services/email');
 
 // Validation des champs requis
 function validateFields(body, fields) {
@@ -172,6 +173,11 @@ router.post('/confirm-and-book', async (req, res) => {
       stripe_customer_id: customer_id,
       stripe_setup_intent_id: setup_intent_id,
       stripe_payment_method_id: payment_method_id
+    });
+
+    // 6. Envoyer emails (client + admin) — non bloquant
+    sendReservationConfirmation(reservation.toJSON()).catch(err => {
+      console.error('[EMAIL] Erreur non bloquante:', err.message);
     });
 
     res.json({

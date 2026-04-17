@@ -528,6 +528,37 @@ router.put('/admin/homepage-content', authMiddleware, async (req, res) => {
 });
 
 
+// GET Admin site-settings
+router.get('/admin/site-settings', authMiddleware, async (req, res) => {
+  try {
+    let settings = await SiteSettings.findByPk(1);
+    if (!settings) settings = await SiteSettings.create({ id: 1 });
+    res.json(settings);
+  } catch (e) {
+    res.status(500).json({ detail: e.message });
+  }
+});
+
+// PUT Admin site-settings (footer + coordonnees)
+router.put('/admin/site-settings', authMiddleware, async (req, res) => {
+  try {
+    let settings = await SiteSettings.findByPk(1);
+    if (!settings) settings = await SiteSettings.create({ id: 1 });
+
+    const fields = ['nom_institut', 'adresse', 'ville', 'telephone', 'email', 'facebook_url', 'instagram_url', 'horaires_defaut'];
+    const updateData = {};
+    fields.forEach(f => { if (req.body[f] !== undefined) updateData[f] = req.body[f]; });
+
+    await SiteSettings.update(updateData, { where: { id: 1 } });
+    const updated = await SiteSettings.findByPk(1);
+    res.json(updated);
+  } catch (e) {
+    console.error('PUT /admin/site-settings error:', e);
+    res.status(500).json({ detail: e.message });
+  }
+});
+
+
 // Gestion Prestations
 router.post('/admin/prestations', authMiddleware, async (req, res) => {
   try {
