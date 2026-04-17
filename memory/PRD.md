@@ -8,46 +8,31 @@ Application de reservation pour un institut de beaute "Glow & Shape" avec gestio
 - **Backend**: Node.js/Express + Sequelize ORM (port 8001)
 - **Database**: PostgreSQL (glowandshape / glowshapeuser)
 - **Paiements**: Stripe (Setup Intents pour paiement differe)
+- **Emails**: Resend (MOCKED - en attente de cle API)
 - **CRON**: node-cron debit automatique acomptes a 8h00
 
-## Securite
-- Helmet (7 headers HTTP)
-- CORS restreint (origines autorisees + pattern cluster)
-- Rate limiting: global (200/15min), login (10/15min), Stripe (15/5min)
-- Validation input sur tous les endpoints sensibles
-- JWT 8h, validation token renforcee
-- Fail fast si variables critiques manquantes
-
-## Flux de Paiement Differe
-1. create-setup-intent -> Client Stripe + SetupIntent (PAS de reservation)
-2. Frontend: stripe.confirmCardSetup() -> Valide la carte
-3. confirm-and-book -> Verifie succeeded + anti-double-booking -> Cree reservation
-4. CRON (8h00 jour J): Debite acompte 30%
-5. Annulation >48h: gratuite. Annulation <48h: acompte debite.
-
-## Bugs Corriges (Session actuelle)
-- [x] PostgreSQL reinstalle et stabilise
-- [x] filteredPrestations.map is not a function
-- [x] Cannot read properties of undefined (reading length)
-- [x] Images hero/about cassees
-- [x] Reservations creees meme si paiement echoue
-- [x] Message d'erreur apres reservation reussie (sessionStorage -> React Router state)
-- [x] Creneaux affichaient seulement l'heure de debut (maintenant debut-fin)
-- [x] CORS cluster origins
-- [x] Rate limiter proxy config
-
 ## Fonctionnalites Implementees
-- [x] Site responsive
+- [x] Site responsive (pages publiques + admin)
+- [x] Scroll-to-top automatique (changement page + etapes reservation)
+- [x] Footer dynamique en texte blanc, charge depuis site_settings
+- [x] Page Contact avec carte Google Maps interactive (adresse dynamique)
+- [x] Admin Parametres: edition complete (nom, adresse, ville, tel, email, reseaux, horaires)
 - [x] Listing prestations avec filtres
 - [x] Flux reservation 3 etapes
 - [x] Restriction 48h
-- [x] Paiement differe Stripe
-- [x] CRON debit automatique
+- [x] Paiement differe Stripe (SetupIntent, confirm-and-book)
+- [x] CRON debit automatique acomptes
 - [x] Annulation avec logique 48h
 - [x] Anti-double-booking
-- [x] Securite maximale
-- [x] Page succes reservation (React Router state)
+- [x] Securite maximale (helmet, CORS, rate limit, validation)
+- [x] Envoi emails reservation (MOCKED - Resend configure mais cle API manquante)
 
 ## Taches Restantes
-### P2 - Futur
+### P1
+- [ ] Fournir cle API Resend pour activer les emails
+### P2
 - [ ] Gestion des categories de prestations (CRUD + page admin)
+
+## Credentials
+- Admin: admin@glowshape.fr / admin123
+- Admin email notifications: contact.glowshape49@gmail.com
