@@ -67,11 +67,11 @@ export default function Footer() {
           <div data-testid="footer-links-section">
             <h3 className="text-lg sm:text-xl font-serif mb-4 sm:mb-6 text-white">Liens rapides</h3>
             <div className="space-y-2 sm:space-y-3">
-              <Link to="/" className="block text-xs sm:text-sm text-white/80 hover:text-accent transition-colors">Accueil</Link>
-              <Link to="/prestations" className="block text-xs sm:text-sm text-white/80 hover:text-accent transition-colors">Nos prestations</Link>
-              <Link to="/avant-apres" className="block text-xs sm:text-sm text-white/80 hover:text-accent transition-colors">Avant/Apres</Link>
-              <Link to="/contact" className="block text-xs sm:text-sm text-white/80 hover:text-accent transition-colors">Contact</Link>
-              <Link to="/reservation" className="block text-xs sm:text-sm text-white/80 hover:text-accent transition-colors">Reserver en ligne</Link>
+              <Link to="/" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Accueil</Link>
+              <Link to="/prestations" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Nos prestations</Link>
+              <Link to="/avant-apres" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Avant/Apres</Link>
+              <Link to="/contact" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Contact</Link>
+              <Link to="/reservation" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Reserver en ligne</Link>
             </div>
           </div>
 

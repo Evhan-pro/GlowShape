@@ -49,7 +49,12 @@ export default function Home() {
       if (Array.isArray(avantApresData)) setAvantApres(avantApresData.slice(0, 3));
 
       const contentData = await safeJson(contentRes, 'homepage-content');
-      if (contentData && contentData.hero_titre) setContent(contentData);
+      if (contentData && contentData.hero_titre) {
+        setContent(prev => ({
+          ...prev,
+          ...Object.fromEntries(Object.entries(contentData).filter(([, v]) => v != null))
+        }));
+      }
 
     } catch (error) {
       console.error('Erreur fetchData:', error);
