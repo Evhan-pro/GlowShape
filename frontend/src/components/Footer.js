@@ -87,29 +87,29 @@ export default function Footer() {
           <div data-testid="footer-social-section" className="sm:col-span-2 lg:col-span-1">
             <h3 className="text-lg sm:text-xl font-serif mb-4 sm:mb-6 text-white">Suivez-nous</h3>
             <div className="flex space-x-3 sm:space-x-4">
-              {settings?.facebook_url && (
+              {settings?.facebook_url ? (
                 <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-facebook"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
                   <Facebook size={18} />
                 </a>
+              ) : (
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Facebook size={18} /></div>
               )}
-              {settings?.instagram_url && (
+              {settings?.instagram_url ? (
                 <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-instagram"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
                   <Instagram size={18} />
                 </a>
+              ) : (
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Instagram size={18} /></div>
               )}
-              {settings?.tiktok_url && (
+              {settings?.tiktok_url ? (
                 <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-tiktok"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
                   <TikTokIcon size={18} />
                 </a>
-              )}
-              {!settings?.facebook_url && !settings?.instagram_url && !settings?.tiktok_url && (
-                <>
-                  <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Facebook size={18} /></div>
-                  <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Instagram size={18} /></div>
-                </>
+              ) : (
+                <div data-testid="social-link-tiktok" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><TikTokIcon size={18} /></div>
               )}
             </div>
             <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-white/60">

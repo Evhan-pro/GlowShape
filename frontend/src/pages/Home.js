@@ -14,6 +14,16 @@ export default function Home() {
   const [prestationsPhares, setPrestationsPhares] = useState([]);
   const [temoignages, setTemoignages] = useState([]);
   const [avantApres, setAvantApres] = useState([]);
+  const defaultContent = {
+    hero_titre: "L'Élégance au Naturel",
+    hero_sous_titre: "Découvrez un havre de beauté et de bien-être où chaque soin est une expérience unique",
+    hero_image: "",
+    about_titre: "À Propos de Notre Institut",
+    about_texte: "Depuis plus de 10 ans, nous nous engageons à offrir à nos clientes une expérience unique alliant expertise, écoute et produits de haute qualité.",
+    about_image: "",
+    cta_titre: "Prête à Vous Offrir un Moment de Bien-Être ?",
+    cta_texte: "Réservez dès maintenant votre prestation et laissez-vous choyer par nos expertes"
+  };
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,10 +53,13 @@ export default function Home() {
       const contentData = await safeJson(contentRes, 'homepage-content');
       if (contentData && contentData.hero_titre) {
         setContent(contentData);
+      } else {
+        setContent(defaultContent);
       }
 
     } catch (error) {
       console.error('Erreur fetchData:', error);
+      setContent(defaultContent);
     } finally {
       setLoading(false);
     }
