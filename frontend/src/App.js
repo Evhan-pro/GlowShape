@@ -23,6 +23,7 @@ import AdminHoraires from './pages/admin/AdminHoraires';
 import AdminHomepage from './pages/admin/AdminHomepage';
 import AdminAvantApres from './pages/admin/AdminAvantApres';
 import AdminTemoignages from './pages/admin/AdminTemoignages';
+import AdminPages from './pages/admin/AdminPages';
 import './App.css';
 
 function App() {
@@ -101,6 +102,7 @@ function App() {
           <Route path="/admin/avant-apres" element={<ProtectedRoute><AdminAvantApres /></ProtectedRoute>} />
           <Route path="/admin/temoignages" element={<ProtectedRoute><AdminTemoignages /></ProtectedRoute>} />
           <Route path="/admin/parametres" element={<ProtectedRoute><AdminParametres /></ProtectedRoute>} />
+          <Route path="/admin/pages" element={<ProtectedRoute><AdminPages /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -53,12 +53,20 @@ Application de réservation pour institut de beauté "Glow & Shape" - site vitri
 - [x] Centrage images Avant/Après
 - [x] Lien TikTok dans footer + champ admin (modèle DB + route + UI)
 - [x] Correction flickering (suppression données hardcodées, loading state)
+- [x] **Zéro donnée hardcodée** — tout le contenu vient de la BDD
+- [x] FAQ dynamiques gérées depuis l'admin (JSONB dans homepage_content)
+- [x] Pages Prestations, Avant/Après, Contact : titres/textes modifiables depuis l'admin
+- [x] Nouvelle page admin "Contenu pages" pour gérer les textes de chaque page
+- [x] Modèle PageContent (JSONB par page) pour contenu flexible
+- [x] Footer 100% dynamique (aucun fallback)
 
 ## Endpoints API clés
 - `GET/POST /api/prestations` - Liste/création prestations
 - `GET /api/categories` - Catégories distinctes
 - `GET /api/site-settings` / `PUT /api/admin/site-settings` - Paramètres site (incl. tiktok_url)
-- `GET/PUT /api/admin/homepage-content` - Contenu page d'accueil
+- `GET/PUT /api/admin/homepage-content` - Contenu page d'accueil (incl. faq_items)
+- `GET /api/page-content/:pageKey` - Contenu dynamique par page (public)
+- `PUT /api/admin/page-content/:pageKey` - Modifier contenu d'une page (admin)
 - `GET /api/auth/google/login` - Démarrer OAuth Google Calendar
 - `GET /api/auth/google/callback` - Callback OAuth
 - `GET /api/admin/google/status` - Statut connexion Google
@@ -69,6 +77,8 @@ Application de réservation pour institut de beauté "Glow & Shape" - site vitri
 - `site_settings` : id, nom_institut, adresse, ville, telephone, email, facebook_url, instagram_url, **tiktok_url**, horaires_defaut
 - `prestations` : id, nom, categorie, duree_minutes, prix_euros, description
 - `reservations` : id, prestation_id, prestation_nom, nom_client, email_client, date, heure_debut, heure_fin, statut, stripe_*
+- `homepage_content` : id, hero_titre, hero_sous_titre, hero_image, about_titre, about_texte, about_image, cta_titre, cta_texte, **faq_items** (JSONB)
+- `page_contents` : page_key (PK), content (JSONB) — contenu par page (prestations, avant_apres, contact)
 
 ## Backlog
 - [ ] P2 - Intégrer Google My Business Reviews (reporté par l'utilisateur)

@@ -109,6 +109,11 @@ const HomePageContent = sequelize.define('HomePageContent', {
   faq_items: { type: DataTypes.JSONB }
 }, { tableName: 'homepage_content', timestamps: false });
 
+const PageContent = sequelize.define('PageContent', {
+  page_key: { type: DataTypes.STRING, primaryKey: true },
+  content: { type: DataTypes.JSONB, defaultValue: {} }
+}, { tableName: 'page_contents', timestamps: false });
+
 const Temoignage = sequelize.define('Temoignage', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   nom: { type: DataTypes.STRING, allowNull: false },
@@ -184,5 +189,6 @@ module.exports = {
   AvantApres,
   HomePageContent,
   Temoignage,
-  SiteSettings
+  SiteSettings,
+  PageContent
 };

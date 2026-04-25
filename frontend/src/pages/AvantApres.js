@@ -17,12 +17,22 @@ export default function AvantApres() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [sliderPosition, setSliderPosition] = useState(50);
   const [loading, setLoading] = useState(true);
+  const [pageContent, setPageContent] = useState({});
   const sliderRef = useRef(null);
   const isDragging = useRef(false);
 
   useEffect(() => {
     fetchItems();
+    fetchPageContent();
   }, []);
+
+  const fetchPageContent = async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/page-content/avant_apres`);
+      const data = await res.json();
+      setPageContent(data || {});
+    } catch (e) { console.error(e); }
+  };
 
   const fetchItems = async () => {
     try {
@@ -112,11 +122,14 @@ export default function AvantApres() {
       <section className="py-8 sm:py-12 md:py-16">
         <div className="container-custom px-4">
           <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-4 sm:mb-6">Nos Transformations</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground">
-              Découvrez les résultats spectaculaires obtenus grâce à nos soins experts. 
-              Chaque transformation témoigne de notre engagement envers l'excellence.
-            </p>
+            {pageContent.titre && (
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif mb-4 sm:mb-6">{pageContent.titre}</h1>
+            )}
+            {pageContent.sous_titre && (
+              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground whitespace-pre-line">
+                {pageContent.sous_titre}
+              </p>
+            )}
           </motion.div>
         </div>
       </section>
@@ -200,26 +213,32 @@ export default function AvantApres() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-24">
-        <div className="container-custom px-4">
-          <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-4 sm:mb-6">
-              Prête pour votre transformation ?
-            </h2>
-            <p className="text-muted-foreground mb-6 sm:mb-8 text-sm sm:text-base">
-              Nos expertes sont à votre écoute pour vous accompagner vers la meilleure version de vous-même.
-            </p>
-            <Link
-              to="/reservation"
-              data-testid="avant-apres-cta-button"
-              className="inline-flex items-center btn-primary px-6 sm:px-8 py-2.5 sm:py-3 bg-accent text-accent-foreground rounded-sm font-medium space-x-2 hover:shadow-hover text-sm sm:text-base"
-            >
-              <span>Réserver maintenant</span>
-              <ChevronRight size={20} />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      {(pageContent.cta_titre || pageContent.cta_texte) && (
+        <section className="py-12 sm:py-16 md:py-24">
+          <div className="container-custom px-4">
+            <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto">
+              {pageContent.cta_titre && (
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-4 sm:mb-6">
+                  {pageContent.cta_titre}
+                </h2>
+              )}
+              {pageContent.cta_texte && (
+                <p className="text-muted-foreground mb-6 sm:mb-8 text-sm sm:text-base whitespace-pre-line">
+                  {pageContent.cta_texte}
+                </p>
+              )}
+              <Link
+                to="/reservation"
+                data-testid="avant-apres-cta-button"
+                className="inline-flex items-center btn-primary px-6 sm:px-8 py-2.5 sm:py-3 bg-accent text-accent-foreground rounded-sm font-medium space-x-2 hover:shadow-hover text-sm sm:text-base"
+              >
+                <span>Réserver maintenant</span>
+                <ChevronRight size={20} />
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Modern Slider Modal */}
       {selectedItem && (

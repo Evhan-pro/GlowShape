@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Package, Calendar, Mail, Settings, LogOut, Home, Image, MessageSquare, Clock, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Calendar, Mail, Settings, LogOut, Home, Image, MessageSquare, Clock, Menu, X, FileText } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
   const { logout } = useAuth();
@@ -27,6 +27,7 @@ export default function AdminLayout({ children }) {
     { path: '/admin/avant-apres', icon: Image, label: 'Avant/Après' },
     { path: '/admin/temoignages', icon: MessageSquare, label: 'Témoignages' },
     { path: '/admin/contacts', icon: Mail, label: 'Messages' },
+    { path: '/admin/pages', icon: FileText, label: 'Contenu pages' },
     { path: '/admin/parametres', icon: Settings, label: 'Paramètres' },
   ];
 

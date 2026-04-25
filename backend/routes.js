@@ -16,7 +16,8 @@ const {
   AvantApres,
   HomePageContent,
   Temoignage,
-  SiteSettings
+  SiteSettings,
+  PageContent
 } = require('./models');
 
 const { sendEmail } = require('./services/email');
@@ -685,6 +686,50 @@ router.post('/admin/horaires/batch', authMiddleware, async (req, res) => {
     res.json({ message: `${horaires.length} horaires enregistrés` });
   } catch (error) {
     res.status(500).json({ detail: error.message });
+  }
+});
+
+// ========== PAGE CONTENT (generic per-page editable text) ==========
+router.get('/page-content/:pageKey', async (req, res) => {
+  try {
+    let page = await PageContent.findByPk(req.params.pageKey);
+    if (!page) page = await PageContent.create({ page_key: req.params.pageKey, content: {} });
+    res.json(page.content);
+  } catch (e) {
+    res.status(500).json({ detail: e.message });
+  }
+});
+
+router.get('/admin/page-content/:pageKey', authMiddleware, async (req, res) => {
+  try {
+    let page = await PageContent.findByPk(req.params.pageKey);
+    if (!page) page = await PageContent.create({ page_key: req.params.pageKey, content: {} });
+    res.json(page.content);
+  } catch (e) {
+    res.status(500).json({ detail: e.message });
+  }
+});
+
+router.put('/admin/page-content/:pageKey', authMiddleware, async (req, res) => {
+  try {
+    const [page] = await PageContent.upsert({
+      page_key: req.params.pageKey,
+      content: req.body
+    }, { returning: true });
+    res.json(page.content);
+  } catch (e) {
+    res.status(500).json({ detail: e.message });
+  }
+});
+
+router.get('/admin/page-contents', authMiddleware, async (req, res) => {
+  try {
+    const pages = await PageContent.findAll();
+    const result = {};
+    pages.forEach(p => { result[p.page_key] = p.content; });
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ detail: e.message });
   }
 });
 
