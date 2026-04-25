@@ -98,14 +98,15 @@ const AvantApres = sequelize.define('AvantApres', {
 
 const HomePageContent = sequelize.define('HomePageContent', {
   id: { type: DataTypes.INTEGER, primaryKey: true, defaultValue: 1 },
-  hero_titre: { type: DataTypes.STRING, defaultValue: "L'Élégance au Naturel" },
-  hero_sous_titre: { type: DataTypes.TEXT, defaultValue: "Découvrez un havre de beauté et de bien-être où chaque soin est une expérience unique" },
+  hero_titre: { type: DataTypes.STRING },
+  hero_sous_titre: { type: DataTypes.TEXT },
   hero_image: { type: DataTypes.TEXT },
-  about_titre: { type: DataTypes.STRING, defaultValue: "À Propos de Notre Institut" },
+  about_titre: { type: DataTypes.STRING },
   about_texte: { type: DataTypes.TEXT },
   about_image: { type: DataTypes.TEXT },
-  cta_titre: { type: DataTypes.STRING, defaultValue: "Prête à Vous Offrir un Moment de Bien-Être ?" },
-  cta_texte: { type: DataTypes.TEXT }
+  cta_titre: { type: DataTypes.STRING },
+  cta_texte: { type: DataTypes.TEXT },
+  faq_items: { type: DataTypes.JSONB }
 }, { tableName: 'homepage_content', timestamps: false });
 
 const Temoignage = sequelize.define('Temoignage', {

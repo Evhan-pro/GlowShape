@@ -506,7 +506,8 @@ router.put('/admin/homepage-content', authMiddleware, async (req, res) => {
       'about_texte',
       'about_image',
       'cta_titre',
-      'cta_texte'
+      'cta_texte',
+      'faq_items'
     ];
 
     const data = {};

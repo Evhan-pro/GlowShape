@@ -18,8 +18,10 @@ export default function Footer() {
       .catch(() => {});
   }, []);
 
+  if (!settings) return null;
+
   const formatHoraires = () => {
-    if (!settings?.horaires_defaut) return { jours: 'Lundi - Samedi', heures: '9h00 - 19h00' };
+    if (!settings.horaires_defaut) return null;
     const h = settings.horaires_defaut;
     const jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
     const noms = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -28,10 +30,10 @@ export default function Footer() {
     if (debut !== null && fin !== null) {
       const j = debut === fin ? noms[debut] : `${noms[debut]} - ${noms[fin]}`;
       const p = h[jours[debut]];
-      const hr = p ? `${p.ouverture.replace(':', 'h')} - ${p.fermeture.replace(':', 'h')}` : '9h00 - 19h00';
+      const hr = p ? `${p.ouverture.replace(':', 'h')} - ${p.fermeture.replace(':', 'h')}` : null;
       return { jours: j, heures: hr };
     }
-    return { jours: 'Lundi - Samedi', heures: '9h00 - 19h00' };
+    return null;
   };
 
   const horaires = formatHoraires();
@@ -40,32 +42,42 @@ export default function Footer() {
     <footer data-testid="footer" className="bg-primary py-8 sm:py-12 md:py-16">
       <div className="container-custom px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
-          {/* Coordonnees */}
+          {/* Coordonnées */}
           <div data-testid="footer-contact-section">
-            <h3 className="text-xl sm:text-2xl font-serif mb-4 sm:mb-6 text-white">{settings?.nom_institut || 'Institut'}</h3>
+            {settings.nom_institut && (
+              <h3 className="text-xl sm:text-2xl font-serif mb-4 sm:mb-6 text-white">{settings.nom_institut}</h3>
+            )}
             <div className="space-y-3 sm:space-y-4">
-              <div className="flex items-start space-x-3">
-                <MapPin size={18} className="text-accent mt-1 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-white">
-                  {settings?.adresse || 'Espace Anjou'}<br />
-                  {settings?.ville || '49000 Angers'}
-                </p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <Phone size={18} className="text-accent mt-1 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-white">{settings?.telephone || '01 23 45 67 89'}</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <Mail size={18} className="text-accent mt-1 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-white break-all">{settings?.email || 'contact@institut.fr'}</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <Clock size={18} className="text-accent mt-1 flex-shrink-0" />
-                <div className="text-xs sm:text-sm text-white">
-                  <p>{horaires.jours}</p>
-                  <p>{horaires.heures}</p>
+              {(settings.adresse || settings.ville) && (
+                <div className="flex items-start space-x-3">
+                  <MapPin size={18} className="text-accent mt-1 flex-shrink-0" />
+                  <p className="text-xs sm:text-sm text-white">
+                    {settings.adresse && <>{settings.adresse}<br /></>}
+                    {settings.ville}
+                  </p>
                 </div>
-              </div>
+              )}
+              {settings.telephone && (
+                <div className="flex items-start space-x-3">
+                  <Phone size={18} className="text-accent mt-1 flex-shrink-0" />
+                  <p className="text-xs sm:text-sm text-white">{settings.telephone}</p>
+                </div>
+              )}
+              {settings.email && (
+                <div className="flex items-start space-x-3">
+                  <Mail size={18} className="text-accent mt-1 flex-shrink-0" />
+                  <p className="text-xs sm:text-sm text-white break-all">{settings.email}</p>
+                </div>
+              )}
+              {horaires && (
+                <div className="flex items-start space-x-3">
+                  <Clock size={18} className="text-accent mt-1 flex-shrink-0" />
+                  <div className="text-xs sm:text-sm text-white">
+                    <p>{horaires.jours}</p>
+                    {horaires.heures && <p>{horaires.heures}</p>}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -87,7 +99,7 @@ export default function Footer() {
           <div data-testid="footer-social-section" className="sm:col-span-2 lg:col-span-1">
             <h3 className="text-lg sm:text-xl font-serif mb-4 sm:mb-6 text-white">Suivez-nous</h3>
             <div className="flex space-x-3 sm:space-x-4">
-              {settings?.facebook_url ? (
+              {settings.facebook_url ? (
                 <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-facebook"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
                   <Facebook size={18} />
@@ -95,7 +107,7 @@ export default function Footer() {
               ) : (
                 <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Facebook size={18} /></div>
               )}
-              {settings?.instagram_url ? (
+              {settings.instagram_url ? (
                 <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-instagram"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
                   <Instagram size={18} />
@@ -103,7 +115,7 @@ export default function Footer() {
               ) : (
                 <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Instagram size={18} /></div>
               )}
-              {settings?.tiktok_url ? (
+              {settings.tiktok_url ? (
                 <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-tiktok"
                   className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
                   <TikTokIcon size={18} />
@@ -112,15 +124,12 @@ export default function Footer() {
                 <div data-testid="social-link-tiktok" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><TikTokIcon size={18} /></div>
               )}
             </div>
-            <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-white/60">
-              Découvrez nos actualités et nos conseils beauté sur nos réseaux sociaux.
-            </p>
           </div>
         </div>
 
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/20 text-center">
           <p className="text-xs sm:text-sm text-white/60">
-            &copy; {new Date().getFullYear()} {settings?.nom_institut || 'Institut'}. Tous droits réservés.
+            &copy; {new Date().getFullYear()} {settings.nom_institut}. Tous droits réservés.
           </p>
         </div>
       </div>
