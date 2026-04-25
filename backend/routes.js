@@ -545,7 +545,7 @@ router.put('/admin/site-settings', authMiddleware, async (req, res) => {
     let settings = await SiteSettings.findByPk(1);
     if (!settings) settings = await SiteSettings.create({ id: 1 });
 
-    const fields = ['nom_institut', 'adresse', 'ville', 'telephone', 'email', 'facebook_url', 'instagram_url', 'horaires_defaut'];
+    const fields = ['nom_institut', 'adresse', 'ville', 'telephone', 'email', 'facebook_url', 'instagram_url', 'tiktok_url', 'horaires_defaut'];
     const updateData = {};
     fields.forEach(f => { if (req.body[f] !== undefined) updateData[f] = req.body[f]; });
 
@@ -705,9 +705,11 @@ router.get('/auth/google/callback', async (req, res) => {
     await GoogleToken.destroy({ where: {} });
     await GoogleToken.create(tokens);
     
-    res.redirect('/admin/horaires');
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/admin/parametres?google=connected`);
   } catch (error) {
-    res.status(400).json({ detail: error.message });
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/admin/parametres?google=error`);
   }
 });
 

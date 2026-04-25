@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Facebook, Instagram } from 'lucide-react';
 
+const TikTokIcon = ({ size = 18, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.71a8.21 8.21 0 0 0 4.76 1.5v-3.4a4.85 4.85 0 0 1-1-.12z"/>
+  </svg>
+);
+
 export default function Footer() {
   const [settings, setSettings] = useState(null);
 
@@ -69,13 +75,15 @@ export default function Footer() {
             <div className="space-y-2 sm:space-y-3">
               <Link to="/" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Accueil</Link>
               <Link to="/prestations" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Nos prestations</Link>
-              <Link to="/avant-apres" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Avant/Apres</Link>
+              <Link to="/avant-apres" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Avant/Après</Link>
               <Link to="/contact" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Contact</Link>
-              <Link to="/reservation" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Reserver en ligne</Link>
+              <Link to="/reservation" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Réserver en ligne</Link>
+              <Link to="/cgu" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Conditions Générales d'Utilisation</Link>
+              <Link to="/cgv" className="block text-xs sm:text-sm text-white/80 hover:text-white hover:font-semibold transition-all">Conditions Générales de Vente</Link>
             </div>
           </div>
 
-          {/* Reseaux sociaux */}
+          {/* Réseaux sociaux */}
           <div data-testid="footer-social-section" className="sm:col-span-2 lg:col-span-1">
             <h3 className="text-lg sm:text-xl font-serif mb-4 sm:mb-6 text-white">Suivez-nous</h3>
             <div className="flex space-x-3 sm:space-x-4">
@@ -91,7 +99,13 @@ export default function Footer() {
                   <Instagram size={18} />
                 </a>
               )}
-              {!settings?.facebook_url && !settings?.instagram_url && (
+              {settings?.tiktok_url && (
+                <a href={settings.tiktok_url} target="_blank" rel="noopener noreferrer" data-testid="social-link-tiktok"
+                  className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-accent transition-colors text-white">
+                  <TikTokIcon size={18} />
+                </a>
+              )}
+              {!settings?.facebook_url && !settings?.instagram_url && !settings?.tiktok_url && (
                 <>
                   <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Facebook size={18} /></div>
                   <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><Instagram size={18} /></div>
@@ -99,14 +113,14 @@ export default function Footer() {
               )}
             </div>
             <p className="mt-4 sm:mt-6 text-xs sm:text-sm text-white/60">
-              Decouvrez nos actualites et nos conseils beaute sur nos reseaux sociaux.
+              Découvrez nos actualités et nos conseils beauté sur nos réseaux sociaux.
             </p>
           </div>
         </div>
 
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/20 text-center">
           <p className="text-xs sm:text-sm text-white/60">
-            &copy; {new Date().getFullYear()} {settings?.nom_institut || 'Institut'}. Tous droits reserves.
+            &copy; {new Date().getFullYear()} {settings?.nom_institut || 'Institut'}. Tous droits réservés.
           </p>
         </div>
       </div>

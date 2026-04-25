@@ -11,6 +11,8 @@ import Contact from './pages/Contact';
 import Reservation from './pages/Reservation';
 import ReservationSuccess from './pages/ReservationSuccess';
 import AvantApres from './pages/AvantApres';
+import CGU from './pages/CGU';
+import CGV from './pages/CGV';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPrestations from './pages/admin/AdminPrestations';
@@ -69,6 +71,20 @@ function App() {
             <div className="min-h-screen flex flex-col">
               <Navbar />
               <main className="flex-grow"><AvantApres /></main>
+              <Footer />
+            </div>
+          } />
+          <Route path="/cgu" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><CGU /></main>
+              <Footer />
+            </div>
+          } />
+          <Route path="/cgv" element={
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-grow"><CGV /></main>
               <Footer />
             </div>
           } />

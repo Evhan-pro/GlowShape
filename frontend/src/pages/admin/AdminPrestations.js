@@ -7,11 +7,14 @@ import { Plus, Edit, Trash2, X } from 'lucide-react';
 export default function AdminPrestations() {
   const { getAuthHeaders } = useAuth();
   const [prestations, setPrestations] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
   const [editingPrestation, setEditingPrestation] = useState(null);
   const [formData, setFormData] = useState({
     nom: '',
-    categorie: 'Visage',
+    categorie: '',
     duree_minutes: 60,
     prix_euros: 0,
     description: ''
@@ -19,7 +22,18 @@ export default function AdminPrestations() {
 
   useEffect(() => {
     fetchPrestations();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/categories`);
+      const data = response.data;
+      setCategories(Array.isArray(data.categories) ? data.categories : []);
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
 
   const fetchPrestations = async () => {
     try {
@@ -81,13 +95,23 @@ export default function AdminPrestations() {
       setEditingPrestation(null);
       setFormData({
         nom: '',
-        categorie: 'Visage',
+        categorie: categories.length > 0 ? categories[0] : '',
         duree_minutes: 60,
         prix_euros: 0,
         description: ''
       });
     }
     setShowModal(true);
+  };
+
+  const handleAddCategory = () => {
+    const trimmed = newCategory.trim();
+    if (trimmed && !categories.includes(trimmed)) {
+      setCategories(prev => [...prev, trimmed]);
+      setFormData(prev => ({ ...prev, categorie: trimmed }));
+    }
+    setNewCategory('');
+    setShowCategoryModal(false);
   };
 
   const closeModal = () => {
@@ -100,13 +124,24 @@ export default function AdminPrestations() {
       <div>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-serif">Gestion des Prestations</h1>
-          <button
-            onClick={() => openModal()}
-            className="flex items-center space-x-2 bg-accent text-accent-foreground px-4 py-2 rounded-sm hover:opacity-90"
-          >
-            <Plus size={20} />
-            <span>Nouvelle prestation</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setShowCategoryModal(true)}
+              data-testid="create-category-btn"
+              className="flex items-center space-x-2 border border-accent text-accent px-4 py-2 rounded-sm hover:bg-accent/10"
+            >
+              <Plus size={20} />
+              <span>Nouvelle catégorie</span>
+            </button>
+            <button
+              onClick={() => openModal()}
+              data-testid="create-prestation-btn"
+              className="flex items-center space-x-2 bg-accent text-accent-foreground px-4 py-2 rounded-sm hover:opacity-90"
+            >
+              <Plus size={20} />
+              <span>Nouvelle prestation</span>
+            </button>
+          </div>
         </div>
 
         <div className="bg-white border border-border rounded-sm overflow-hidden">
@@ -183,11 +218,9 @@ export default function AdminPrestations() {
                     onChange={(e) => setFormData({ ...formData, categorie: e.target.value })}
                     className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option>Visage</option>
-                    <option>Corps</option>
-                    <option>Épilation</option>
-                    <option>Ongles</option>
-                    <option>Massages</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -242,6 +275,63 @@ export default function AdminPrestations() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+        {/* Category Modal */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-sm max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-serif">Nouvelle Catégorie</h2>
+                <button onClick={() => setShowCategoryModal(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Nom de la catégorie</label>
+                  <input
+                    type="text"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    data-testid="new-category-input"
+                    placeholder="Ex: Maquillage, Soins du corps..."
+                    className="w-full px-4 py-2 border border-input rounded-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                  />
+                </div>
+                {categories.length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Catégories existantes :</p>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((cat) => (
+                        <span key={cat} className="inline-block px-3 py-1 bg-accent/10 text-accent text-xs rounded-full">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryModal(false)}
+                    className="px-4 py-2 border border-border rounded-sm hover:bg-secondary"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddCategory}
+                    data-testid="save-category-btn"
+                    disabled={!newCategory.trim()}
+                    className="px-4 py-2 bg-accent text-accent-foreground rounded-sm hover:opacity-90 disabled:opacity-50"
+                  >
+                    Ajouter
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

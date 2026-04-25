@@ -127,6 +127,7 @@ const SiteSettings = sequelize.define('SiteSettings', {
   email: { type: DataTypes.STRING, defaultValue: "contact@glowandshape.fr" },
   facebook_url: { type: DataTypes.STRING, defaultValue: "" },
   instagram_url: { type: DataTypes.STRING, defaultValue: "" },
+  tiktok_url: { type: DataTypes.STRING, defaultValue: "" },
   horaires_defaut: { type: DataTypes.JSONB }
 }, { tableName: 'site_settings', timestamps: false });
 

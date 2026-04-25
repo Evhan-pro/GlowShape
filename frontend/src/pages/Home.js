@@ -14,16 +14,8 @@ export default function Home() {
   const [prestationsPhares, setPrestationsPhares] = useState([]);
   const [temoignages, setTemoignages] = useState([]);
   const [avantApres, setAvantApres] = useState([]);
-  const [content, setContent] = useState({
-    hero_titre: "L'Élégance au Naturel",
-    hero_sous_titre: "Découvrez un havre de beauté et de bien-être où chaque soin est une expérience unique",
-    hero_image: "https://images.unsplash.com/photo-1722350766824-f8520e9676ac?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzB8MHwxfHNlYXJjaHwyfHx3b21hbiUyMGZhY2lhbCUyMHRyZWF0bWVudCUyMGNsb3NlJTIwdXAlMjBhZXN0aGV0aWN8ZW58MHx8fHwxNzY2MTA1Mjk5fDA&ixlib=rb-4.1.0&q=85",
-    about_titre: "À Propos de Notre Institut",
-    about_texte: "Depuis plus de 10 ans, nous nous engageons à offrir à nos clientes une expérience unique alliant expertise, écoute et produits de haute qualité.",
-    about_image: "https://images.unsplash.com/photo-1763485956229-a5e1396f7d3a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBzcGElMjBpbnRlcmlvciUyMGJlaWdlJTIwc3RvbmUlMjBtaW5pbWFsaXN0fGVufDB8fHx8MTc2NjEwNTI5N3ww&ixlib=rb-4.1.0&q=85",
-    cta_titre: "Prête à Vous Offrir un Moment de Bien-Être ?",
-    cta_texte: "Réservez dès maintenant votre prestation et laissez-vous choyer par nos expertes"
-  });
+  const [content, setContent] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
@@ -50,14 +42,13 @@ export default function Home() {
 
       const contentData = await safeJson(contentRes, 'homepage-content');
       if (contentData && contentData.hero_titre) {
-        setContent(prev => ({
-          ...prev,
-          ...Object.fromEntries(Object.entries(contentData).filter(([, v]) => v != null))
-        }));
+        setContent(contentData);
       }
 
     } catch (error) {
       console.error('Erreur fetchData:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +88,14 @@ export default function Home() {
     { id: 3, nom: 'Émilie R.', texte: 'Le massage aux pierres chaudes est divin. Un moment de pur bien-être.', note: 5 }
   ];
 
+  if (loading || !content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-accent"></div>
+      </div>
+    );
+  }
+
   return (
     <div data-testid="home-page" className="overflow-x-hidden">
       {/* Hero Section */}
@@ -122,7 +121,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 text-gray-200 px-4"
+            className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 text-gray-200 px-4 whitespace-pre-line"
           >
             {content.hero_sous_titre}
           </motion.p>
@@ -169,7 +168,7 @@ export default function Home() {
                     <Sparkles className="text-accent" size={20} />
                   </div>
                   <h3 className="text-lg sm:text-xl font-serif mb-2">{prestation.nom}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2">{prestation.description}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2 whitespace-pre-line">{prestation.description}</p>
                   <div className="flex items-center justify-between mb-3 sm:mb-0">
                     <span className="text-xl sm:text-2xl font-serif text-accent">{prestation.prix_euros}€</span>
                     <span className="text-xs sm:text-sm text-muted-foreground">{prestation.duree_minutes} min</span>
@@ -279,7 +278,7 @@ export default function Home() {
             </motion.div>
             <motion.div {...fadeInUp} className="px-4 sm:px-0">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif mb-4 sm:mb-6">{content.about_titre}</h2>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 whitespace-pre-line">
                 {content.about_texte}
               </p>
               <div className="space-y-3 sm:space-y-4">
@@ -371,7 +370,7 @@ export default function Home() {
         <div className="container-custom">
           <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto px-4">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif mb-4 sm:mb-6">{content.cta_titre}</h2>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 whitespace-pre-line">
               {content.cta_texte}
             </p>
             <Link

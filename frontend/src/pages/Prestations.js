@@ -243,7 +243,7 @@ export default function Prestations() {
                       </span>
                     </div>
                     <h3 className="text-lg sm:text-xl font-serif mb-2">{prestation.nom}</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-4 line-clamp-2 whitespace-pre-line">
                       {prestation.description}
                     </p>
                     <div className="flex items-center justify-between mb-4">

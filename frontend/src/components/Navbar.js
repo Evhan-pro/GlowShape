@@ -7,6 +7,8 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const isHomePage = location.pathname === '/';
+  const isTransparent = !isScrolled && !isMobileMenuOpen && isHomePage;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +54,7 @@ export default function Navbar() {
                 className={`text-sm font-medium transition-colors hover:text-accent ${
                   location.pathname === link.path
                     ? 'text-accent'
-                    : 'text-foreground'
+                    : isTransparent ? 'text-white' : 'text-foreground'
                 }`}
               >
                 {link.label}
@@ -71,7 +73,7 @@ export default function Navbar() {
           <button
             data-testid="mobile-menu-button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-foreground"
+            className={`md:hidden ${isTransparent ? 'text-white' : 'text-foreground'}`}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
